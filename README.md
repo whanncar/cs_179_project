@@ -9,3 +9,4 @@ Project ideas:
   + Fast regex search
   + Fast data compression
   + n-ary search
+  + Checkers solver
