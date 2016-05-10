@@ -1,4 +1,4 @@
-# cs_179_project
+# CS 179 Project
 
 
 Project ideas:
@@ -7,3 +7,5 @@ Project ideas:
   + Fast factoring
   + Fast traveling salesman
   + Fast regex search
+  + Fast data compression
+  + n-ary search
