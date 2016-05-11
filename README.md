@@ -1,12 +1,6 @@
 # CS 179 Project
 
 
-Project ideas:
+Neural Networks!
 
-  + Yelp Reviews project
-  + Fast factoring
-  + Fast traveling salesman
-  + Fast regex search
-  + Fast data compression
-  + n-ary search
-  + Checkers solver
+Andrew & Wade
