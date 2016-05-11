@@ -1,0 +1,22 @@
+
+
+TODO:
+
+  + Submit project proposal                                 [ ]
+  + Do background research                                  [ ]
+    - Understand neural net implementation                     [ ]
+    - Understand conv. neur. net implementation                [ ]
+  + Planning                                                [ ]
+    - Figure out code layout                                   [ ]
+    - Write header files                                       [ ]
+    - Write auxiliary code                                     [ ]
+  + Complete CPU implementation                             [ ]
+    - Make makefile                                            [ ]
+    - Implement neural network                                 [ ]
+    - Implement convolutional neural network                   [ ]
+    - Write documentation                                      [ ]
+  + Complete GPU implementation                             [ ]
+    - Update makefile                                          [ ]
+    - Implement neural network                                 [ ]
+    - Implement convolutional neural network                   [ ]
+    - Write documentation                                      [ ]
