@@ -1,0 +1,4 @@
+
+
+We came up with some structs today
+
