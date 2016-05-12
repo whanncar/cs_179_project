@@ -2,9 +2,9 @@
 
 TODO:
 
-  + Submit project proposal                                 [ ]
+  + Submit project proposal                                 [X]
   + Do background research                                  [ ]
-    - Understand neural net implementation                     [ ]
+    - Understand neural net implementation                     [X]
     - Understand conv. neur. net implementation                [ ]
   + Planning                                                [ ]
     - Figure out code layout                                   [ ]
