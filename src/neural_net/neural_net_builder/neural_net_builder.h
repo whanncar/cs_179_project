@@ -1,6 +1,7 @@
 #include "../neural_net.h"
 
 
+
 typedef struct _layer_config_linked_list_node {
 
     int input_vector_size;
@@ -18,3 +19,7 @@ typedef struct _layer_config_linked_list {
     layer_config_node *last;
 
 } neural_net_config;
+
+
+
+neural_net *new_neural_net(neural_net_config *);

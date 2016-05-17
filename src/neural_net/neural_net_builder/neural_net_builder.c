@@ -2,6 +2,18 @@
 #include "../neural_net.h"
 
 
+
+/*
+ * new_neural_net: Creates and allocates memory for a new
+ *                 neural net based on the given neural
+ *                 net configuration
+ *
+ * arguments: config: Configuration for neural net structure
+ *
+ * return value: Pointer to new neural net
+ *
+ */
+
 neural_net *new_neural_net(neural_net_config *config) {
 
     neural_net *new_net;

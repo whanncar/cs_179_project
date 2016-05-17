@@ -26,6 +26,5 @@ typedef struct {
 
 
 
-
-
 void forward_propagate_neural_net(neural_net *, float (*filter)(float));
+void free_neural_net(neural_net *);

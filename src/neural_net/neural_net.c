@@ -54,4 +54,34 @@ void forward_propagate_neural_net(neural_net *nn, float (*filter)(float)) {
 
 
 
+/*
+ * free_neural_net: Frees the given neural net and
+ *                  all of its associated data
+ *
+ * arguments: nn: Neural net to be freed
+ *
+ */
 
+void free_neural_net(neural_net *nn) {
+
+    neural_layer *layer;
+    int i;
+
+    /* For each neural net layer */
+    for (i = 0; i < nn->num_layers; i++) {
+
+        layer = (nn->layer_ptrs)[i];
+
+        /* Free layer's input data and weights */
+        free(layer->input_data);
+        free(layer->weights);
+    }
+
+    /* Free output data */
+    free(nn->output_data);
+
+    /* Free array of pointers to layers */
+    free(nn->layer_ptrs);
+
+    free(nn);
+}
