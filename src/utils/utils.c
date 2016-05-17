@@ -184,9 +184,42 @@ void calculate_matrix_times_vector(data_matrix *m,
 
 
 
+/*
+ * filter_vector: Computes a filtered value associated
+ *                with entry of a given vector and stores
+ *                the results in a given vector
+ *
+ * arguments: unfiltered_v: The vector to apply the filter to
+ *            filtered_v: The vector to store the filtered
+ *                        values in
+ *            filter: The function for filtering the values
+ *
+ */
 
+void filter_vector(data_vector *unfiltered_v,
+                   data_vector *filtered_v,
+                   float (*filter)(float)) {
 
+    float *unfiltered_arr;
+    float *filtered_arr;
+    int i;
+    int length;
 
+    assert(unfiltered_v->size == filtered_v->size);
+
+    /* Get vectors */
+    unfiltered_arr = get_vector_data(unfiltered_v);
+    filtered_arr = get_vector_data(filtered_v);
+
+    /* Get length of vectors */
+    length = unfiltered_v->size;
+
+    /* Filter */
+    for (i = 0; i < length; i++) {
+        filtered_arr[i] = filter(unfiltered_arr[i]);
+    }
+
+}
 
 
 
