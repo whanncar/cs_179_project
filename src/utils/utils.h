@@ -19,9 +19,14 @@ typedef struct {
 } data_matrix;
 
 
-data_vector *new_vector(int);
-float *get_vector_data(data_vector *);
+data_vector *new_vector(int size);
 float dot_product(data_vector *, data_vector *);
-
+data_matrix *new_data_matrix(int num_rows, int num_columns);
+void calculate_matrix_times_vector(data_matrix *,
+                                   data_vector *,
+                                   data_vector *result);
+void filter_vector(data_vector *input,
+                   data_vector *output,
+                   float (*filter)(float));
 
 /* Lots of methods to add UNRESOLVED */
