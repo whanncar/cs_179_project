@@ -1,4 +1,6 @@
 
+#ifndef UTILS_H
+#define UTILS_H
 
 typedef struct {
 
@@ -29,4 +31,4 @@ void filter_vector(data_vector *input,
                    data_vector *output,
                    float (*filter)(float));
 
-/* Lots of methods to add UNRESOLVED */
+#endif /* UTILS_H */

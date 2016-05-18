@@ -1,8 +1,15 @@
+#include <stdlib.h>
 #include <assert.h>
 #include "utils.h"
 
+
+
+data_vector *get_row(data_matrix *, int);
+
+
+
 /*
- * new_data_vector: Creates a new data vector with
+ * new_vector: Creates a new data vector with
  *                  space for an array of the given
  *                  size
  *
@@ -12,7 +19,9 @@
  *
  */
 
-data_vector *new_data_vector(int size) {
+data_vector *new_vector(int size) {
+
+    assert(size >= 0);
 
     data_vector *new_vector;
 
@@ -166,7 +175,7 @@ void calculate_matrix_times_vector(data_matrix *m,
                                    data_vector *v,
                                    data_vector *result) {
 
-    float *current_row;
+    data_vector *current_row;
     float *result_data;
     int i;
 
