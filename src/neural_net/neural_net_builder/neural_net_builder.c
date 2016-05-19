@@ -1,6 +1,6 @@
 #include "neural_net_builder.h"
 #include "../neural_net.h"
-
+#include <stdio.h>
 
 
 /*
@@ -88,3 +88,13 @@ neural_net *new_neural_net(neural_net_config *config) {
     return new_net;
 
 }
+
+
+
+
+neural_net_config *load_config(char *filename) {
+
+    
+
+}
+

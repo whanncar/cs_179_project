@@ -30,5 +30,7 @@ void calculate_matrix_times_vector(data_matrix *,
 void filter_vector(data_vector *input,
                    data_vector *output,
                    float (*filter)(float));
+data_vector *get_row(data_matrix *, int);
+
 
 #endif /* UTILS_H */

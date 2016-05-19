@@ -4,8 +4,6 @@
 
 
 
-data_vector *get_row(data_matrix *, int);
-
 
 
 /*

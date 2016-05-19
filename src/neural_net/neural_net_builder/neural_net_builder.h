@@ -23,3 +23,4 @@ typedef struct _layer_config_linked_list {
 
 
 neural_net *new_neural_net(neural_net_config *);
+neural_net_config *load_config(char *);
