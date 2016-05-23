@@ -1,5 +1,26 @@
 #include "../utils/utils.h"
 #include "neural_net.h"
+#include <math.h>
+
+
+
+/*
+ * sigmoid_filter: Computes the sigmoid function
+ *
+ * x: Input value to sigmoid
+ *
+ * return value: Output value from sigmoid
+ *
+ * where should I live? UNRESOLVED
+ *
+ */
+
+float sigmoid_filter(float x) {
+
+    return 1 / (1 + expf(-x));
+
+}
+
 
 
 
@@ -14,13 +35,21 @@
 
 void forward_propagate_layer(neural_layer *layer, float (*filter)(float)) {
 
+    int i;
+    float *out_data;
+
     /* Calculate the weighted sums */
     calculate_matrix_times_vector(layer->weights,
                                   layer->input_data,
                                   layer->output_data);
 
-    /* Apply the filter */
-    filter_vector(layer->output_data, layer->output_data, filter);
+    /* Get the output data array */
+    out_data = (float *) (layer->output_data + 1);
+
+    /* Apply the sigmoid filter to the output data */
+    for (i = 0; i < layer->output_data->size; i++) {
+        out_data[i] = sigmoid_filter(out_data[i]);
+    }
 
 }
 
@@ -35,7 +64,7 @@ void forward_propagate_layer(neural_layer *layer, float (*filter)(float)) {
  *
  */
 
-void forward_propagate_neural_net(neural_net *nn, float (*filter)(float)) {
+void forward_propagate_neural_net(neural_net *nn) {
 
     int i;
     int num_layers;
@@ -51,6 +80,20 @@ void forward_propagate_neural_net(neural_net *nn, float (*filter)(float)) {
     }
 
 }
+
+
+
+/*
+ *
+ *
+ */
+
+void backward_propagate_neural_layer(neural_layer *layer) {
+
+    
+
+}
+
 
 
 
