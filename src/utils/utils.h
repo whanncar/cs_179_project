@@ -2,13 +2,16 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+/* Structs */
+
 typedef struct {
 
     int size;
 
-    /* Implicit array of floats */
+    float *data;
 
 } data_vector;
+
 
 
 typedef struct {
@@ -16,21 +19,20 @@ typedef struct {
     int num_rows;
     int num_cols;
 
-    /* Implicit array of data_vectors */
+    float *data;
 
 } data_matrix;
 
 
+
+/* Functions */
+
 data_vector *new_vector(int size);
-float dot_product(data_vector *, data_vector *);
-data_matrix *new_data_matrix(int num_rows, int num_columns);
+
+data_matrix *new_matrix(int num_rows, int num_cols);
+
 void calculate_matrix_times_vector(data_matrix *,
                                    data_vector *,
                                    data_vector *result);
-void filter_vector(data_vector *input,
-                   data_vector *output,
-                   float (*filter)(float));
-data_vector *get_row(data_matrix *, int);
-
 
 #endif /* UTILS_H */

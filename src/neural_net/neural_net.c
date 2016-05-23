@@ -7,7 +7,7 @@
 /*
  * sigmoid_filter: Computes the sigmoid function
  *
- * x: Input value to sigmoid
+ * arguments: x: Input value to sigmoid
  *
  * return value: Output value from sigmoid
  *
@@ -23,33 +23,26 @@ float sigmoid_filter(float x) {
 
 
 
-
 /*
  * forward_propagate_layer: Forward propagates the given neural layer
  *                          using the given filter
  *
  * arguments: layer: The neural layer to forward propagate
- *            filter: The filter applied to the weighted sums
  *
  */
 
-void forward_propagate_layer(neural_layer *layer, float (*filter)(float)) {
+void forward_propagate_layer(neural_layer *layer) {
 
-    int i;
-    float *out_data;
+    /* Calculate pre-raw weighted sums */
+    calculate_matrix_times_vector(layer->w, layer->input, layer->r);
 
-    /* Calculate the weighted sums */
-    calculate_matrix_times_vector(layer->weights,
-                                  layer->input_data,
-                                  layer->output_data);
+    /* Calculate raw weighted sums */
+    multiply_vectors_componentwise(layer->r, layer->t, layer->s);
 
-    /* Get the output data array */
-    out_data = (float *) (layer->output_data + 1);
-
-    /* Apply the sigmoid filter to the output data */
-    for (i = 0; i < layer->output_data->size; i++) {
-        out_data[i] = sigmoid_filter(out_data[i]);
-    }
+    /* Calculate output by filtering raw weighted sums */
+    apply_filter_to_vector_componentwise(layer->s,
+                                         &sigmoid_filter,
+                                         layer->output);
 
 }
 
@@ -60,23 +53,16 @@ void forward_propagate_layer(neural_layer *layer, float (*filter)(float)) {
  *                               using the given filter
  *
  * arguments: nn: The neural net to be forward propagated
- *            filter: The filter applied to the weighted sums at each layer
  *
  */
 
 void forward_propagate_neural_net(neural_net *nn) {
 
     int i;
-    int num_layers;
-    neural_layer *layers;
-
-    /* Store neural net structural data locally */
-    num_layers = nn->num_layers;
-    layers = *(nn->layers_ptrs);
 
     /* Propagate each layer */
-    for (i = 0; i < num_layers; i++) {
-        forward_propagate_layer(layers + i, filter);
+    for (i = 0; i < nn->num_layers; i++) {
+        forward_propagate_layer(nn->layer_ptrs[i]);
     }
 
 }
@@ -84,47 +70,149 @@ void forward_propagate_neural_net(neural_net *nn) {
 
 
 /*
- *
+ * UNRESOLVED
  *
  */
 
-void backward_propagate_neural_layer(neural_layer *layer) {
+void calculate_dL_ds_layer(neural_layer *layer,
+                           neural_layer *next_layer) {
 
-    
+    multiply_vectors_componentwise(next_layer->dL_ds,
+                                   next_layer->t,
+                                   layer->dL_ds);
+
+    compute_matrix_times_vector(next_layer->w_T,
+                                layer->dL_ds,
+                                layer->dL_ds);
+
+    multiply_vectors_componentwise(next_layer->input,
+                                   layer->dL_ds,
+                                   layer->dL_ds);
+
+    compute_additive_inverse_of_vector(next_layer->input,
+                                       next_layer->input);
+
+    add_constant_componentwise_to_vector(next_layer->input, 1,
+                                         next_layer->input);
+
+    multiply_vectors_componentwise(next_layer->input,
+                                   layer->dL_ds,
+                                   layer->dL_ds);
+
+    add_constant_componentwise_to_vector(next_layer->input, -1,
+                                         next_layer->input);
+
+    compute_additive_inverse_of_vector(next_layer->input,
+                                       next_layer->input);
 
 }
 
 
 
-
 /*
- * free_neural_net: Frees the given neural net and
- *                  all of its associated data
- *
- * arguments: nn: Neural net to be freed
+ * UNRESOLVED
  *
  */
 
-void free_neural_net(neural_net *nn) {
+void compute_dL_ds_last_layer(neural_net *nn, data_vector *expected_output) {
+ 
+    neural_layer *last_layer;
 
-    neural_layer *layer;
+    last_layer = nn->layer_ptrs[nn->num_layers - 1];
+
+
+    compute_additive_inverse_of_vector(expected_output, expected_output);
+
+    add_vectors(last_layer->output, expected_output, last_layer->dL_ds);
+
+    multiply_vector_by_constant(last_layer->dL_ds, 2, last_layer->dL_ds);
+
+    multiply_vectors_componentwise(last_layer->dL_ds,
+                                   last_layer->output,
+                                   last_layer->dL_ds);
+
+    compute_additive_inverse_of_vector(last_layer->output,
+                                       last_layer->output);
+
+    add_constant_componentwise_to_vector(last_layer->output, 1,
+                                         last_layer->output);
+
+    multiply_vectors_componentwise(last_layer->output,
+                                   last_layer->dL_ds,
+                                   last_layer->dL_ds);
+
+    add_constant_componentwise_to_vector(last_layer->output, -1,
+                                         last_layer->output);
+
+    compute_additive_inverse_of_vector(last_layer->output,
+                                       last_layer->output);
+}
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void compute_dL_ds_all_layers(neural_net *nn,
+                              data_vector *expected_output) {
+
     int i;
 
-    /* For each neural net layer */
+    compute_dL_ds_last_layer(nn, expected_output);
+
+    for (i = nn->num_layers - 2; i >= 0; i--) {
+        compute_dL_ds_layer(nn->layer_ptrs[i], nn->layer_ptrs[i + 1]);
+    }
+}
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void update_t_layer(neural_layer *layer, float step) {
+
+    multiply_vectors_componentwise(layer->dL_ds, layer->r, layer->dL_ds);
+
+    multiply_vector_by_constant(layer->dL_ds, step, layer->dL_ds);
+
+    compute_additive_inverse_of_vector(layer->dL_ds, layer->dL_ds);
+
+    add_vectors(layer->t, layer->dL_ds, layer->t);
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void update_t_all_layers(neural_net *nn, float step) {
+
+    int i;
+
     for (i = 0; i < nn->num_layers; i++) {
-
-        layer = (nn->layer_ptrs)[i];
-
-        /* Free layer's input data and weights */
-        free(layer->input_data);
-        free(layer->weights);
+        update_t_layer(nn->layer_ptrs[i], step);
     }
 
-    /* Free output data */
-    free(nn->output_data);
+}
 
-    /* Free array of pointers to layers */
-    free(nn->layer_ptrs);
 
-    free(nn);
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void backward_propagate_neural_net(neural_net *nn,
+                                   data_vector *expected_output,
+                                   float step) {
+
+    compute_dL_ds_all_layers(nn, expected_output);
+
+    update_t_all_layers(nn, step);
+
 }
