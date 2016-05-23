@@ -1,8 +1,8 @@
 @echo off
-nvcc -O3 NeuralNetwork1.cc NeuralNetwork_cuda.cu -o NeuralNet -arch=sm_20
-IF EXIST NeuralNetwork1.lib. (
-    del NeuralNetwork1.lib
+nvcc -O3 NeuralNetwork2.cc NeuralNetwork2.cu -o NeuralNet2 -arch=sm_20
+IF EXIST NeuralNetwork2.lib. (
+    del NeuralNetwork2.lib
 )
-IF EXIST NeuralNetwork1.exp. (
-    del NeuralNetwork1.exp
+IF EXIST NeuralNetwork2.exp. (
+    del NeuralNetwork2.exp
 )
