@@ -17,7 +17,8 @@ typedef struct {
 
     data_vector *output;
 
-    data_vector *dL_ds;
+    data_vector *dL_ds_local;
+    data_vector *dL_ds_global;
 
 } neural_layer;
 
@@ -36,10 +37,25 @@ typedef struct {
 
 
 
+typedef struct {
+
+    data_vector *input;
+    data_vector *expected_output;
+
+} sample;
+
+
+
+typedef struct {
+
+    int num_samples;
+
+    sample **sample_ptrs;
+
+} sample_set;
+
 /* Functions */
 
-void forward_propagate_neural_net(neural_net *);
+void train_neural_net(neural_net *, sample_set *, float step);
 
-void backward_propagate_neural_net(neural_net *,
-                                   data_vector *expected_output,
-                                   float step);
+float calculate_loss(neural_net *, sample_set *);

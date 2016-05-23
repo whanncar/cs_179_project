@@ -77,17 +77,17 @@ void forward_propagate_neural_net(neural_net *nn) {
 void calculate_dL_ds_layer(neural_layer *layer,
                            neural_layer *next_layer) {
 
-    multiply_vectors_componentwise(next_layer->dL_ds,
+    multiply_vectors_componentwise(next_layer->dL_ds_local,
                                    next_layer->t,
-                                   layer->dL_ds);
+                                   layer->dL_ds_local);
 
     compute_matrix_times_vector(next_layer->w_T,
-                                layer->dL_ds,
-                                layer->dL_ds);
+                                layer->dL_ds_local,
+                                layer->dL_ds_local);
 
     multiply_vectors_componentwise(next_layer->input,
-                                   layer->dL_ds,
-                                   layer->dL_ds);
+                                   layer->dL_ds_local,
+                                   layer->dL_ds_local);
 
     compute_additive_inverse_of_vector(next_layer->input,
                                        next_layer->input);
@@ -96,7 +96,7 @@ void calculate_dL_ds_layer(neural_layer *layer,
                                          next_layer->input);
 
     multiply_vectors_componentwise(next_layer->input,
-                                   layer->dL_ds,
+                                   layer->dL_ds_local,
                                    layer->dL_ds);
 
     add_constant_componentwise_to_vector(next_layer->input, -1,
@@ -123,13 +123,13 @@ void compute_dL_ds_last_layer(neural_net *nn, data_vector *expected_output) {
 
     compute_additive_inverse_of_vector(expected_output, expected_output);
 
-    add_vectors(last_layer->output, expected_output, last_layer->dL_ds);
+    add_vectors(last_layer->output, expected_output, last_layer->dL_ds_local);
 
-    multiply_vector_by_constant(last_layer->dL_ds, 2, last_layer->dL_ds);
+    multiply_vector_by_constant(last_layer->dL_ds, 2, last_layer->dL_ds_local);
 
-    multiply_vectors_componentwise(last_layer->dL_ds,
+    multiply_vectors_componentwise(last_layer->dL_ds_local,
                                    last_layer->output,
-                                   last_layer->dL_ds);
+                                   last_layer->dL_ds_local);
 
     compute_additive_inverse_of_vector(last_layer->output,
                                        last_layer->output);
@@ -138,8 +138,8 @@ void compute_dL_ds_last_layer(neural_net *nn, data_vector *expected_output) {
                                          last_layer->output);
 
     multiply_vectors_componentwise(last_layer->output,
-                                   last_layer->dL_ds,
-                                   last_layer->dL_ds);
+                                   last_layer->dL_ds_local,
+                                   last_layer->dL_ds_local);
 
     add_constant_componentwise_to_vector(last_layer->output, -1,
                                          last_layer->output);
@@ -166,6 +166,31 @@ void compute_dL_ds_all_layers(neural_net *nn,
 }
 
 
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void add_dL_ds_local_to_dL_ds_global_all_layers(neural_net *nn) {
+
+    int i;
+    neural_layer *current_layer;
+
+    for (i = 0; i < nn->num_layers; i++) {
+
+        current_layer = nn->layer_ptrs[i];
+
+        add_vectors(current_layer->dL_ds_local,
+                    current_layer->dL_ds_global,
+                    current_layer->dL_ds_global);
+
+    }
+
+}
+
+
+
 /*
  * UNRESOLVED
  *
@@ -173,13 +198,17 @@ void compute_dL_ds_all_layers(neural_net *nn,
 
 void update_t_layer(neural_layer *layer, float step) {
 
-    multiply_vectors_componentwise(layer->dL_ds, layer->r, layer->dL_ds);
+    multiply_vectors_componentwise(layer->dL_ds_global,
+                                   layer->r, layer->dL_ds_global);
 
-    multiply_vector_by_constant(layer->dL_ds, step, layer->dL_ds);
+    multiply_vector_by_constant(layer->dL_ds_global,
+                                step,
+                                layer->dL_ds_global);
 
-    compute_additive_inverse_of_vector(layer->dL_ds, layer->dL_ds);
+    compute_additive_inverse_of_vector(layer->dL_ds_global,
+                                       layer->dL_ds_global);
 
-    add_vectors(layer->t, layer->dL_ds, layer->t);
+    add_vectors(layer->t, layer->dL_ds_global, layer->t);
 
 }
 
@@ -207,12 +236,108 @@ void update_t_all_layers(neural_net *nn, float step) {
  *
  */
 
-void backward_propagate_neural_net(neural_net *nn,
-                                   data_vector *expected_output,
-                                   float step) {
+void backward_propagate_neural_net_single_sample(neural_net *nn,
+                                                 data_vector *expected_output) {
 
     compute_dL_ds_all_layers(nn, expected_output);
 
+    add_dL_ds_local_to_dL_ds_global_all_layers(nn);
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void set_neural_net_input(neural_net *nn, data_vector *input) {
+
+    int i;
+
+    for (i = 0; i < nn->input->size; i++) {
+        nn->input->data[i] = input->data[i];
+    }
+
+}
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void train_neural_net(neural_net *nn, sample_set *set, float step) {
+
+    int i;
+    sample *current_sample;
+
+    for (i = 0; i < set->num_samples; i++) {
+
+        current_sample = set->sample_ptrs[i];
+
+        set_neural_net_input(nn, current_sample->input);
+
+        forward_propagate_neural_net(nn);
+
+        backward_propagate_neural_net_single_sample(nn,
+            current_sample->expected_output);
+    }
+
     update_t_all_layers(nn, step);
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+float calculate_sample_loss(neural_net *nn, sample *s) {
+
+    int i;
+    float result;
+    float diff;
+
+    result = 0;
+
+    set_neural_net_input(nn, sample->input);
+
+    forward_propagate_neural_net(nn);
+
+    for (i = 0; i < nn->output->size; i++) {
+
+        diff = nn->output->data[i] - sample->expected_output->data[i];
+
+        result += diff * diff;
+
+    }
+
+    return result;
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+float calculate_loss(neural_net *nn, sample_set *set) {
+
+    int i;
+    float result;
+
+    result = 0;
+
+    for (i = 0; i < set->num_samples; i++) {
+
+        result += calculate_sample_loss(nn, set->sample_ptrs[i]);
+
+    }
 
 }
