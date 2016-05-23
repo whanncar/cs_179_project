@@ -189,7 +189,7 @@ void multiply_vectors_componentwise(data_vector *v1, data_vector *v2,
  *
  */
 
-void compute_matrix_inverse(data_matrix *m, data_matrix *result) {
+void compute_matrix_transpose(data_matrix *m, data_matrix *result) {
 
     int i, j;
 
@@ -201,6 +201,25 @@ void compute_matrix_inverse(data_matrix *m, data_matrix *result) {
 
         }
 
+    }
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void apply_filter_to_vector_componentwise(data_vector *v,
+                                          float (*filter)(float),
+                                          data_vector *result) {
+
+    int i;
+
+    for (i = 0; i < v->size; i++) {
+        result->data[i] = filter(v->data[i]);
     }
 
 }
