@@ -54,4 +54,6 @@ void apply_filter_to_vector_componentwise(data_vector *,
                                           data_vector *result) {
 
 
+void fill_matrix_rand(data_matrix *, float min, float max);
+
 #endif /* UTILS_H */

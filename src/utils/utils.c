@@ -223,3 +223,33 @@ void apply_filter_to_vector_componentwise(data_vector *v,
     }
 
 }
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void fill_matrix_rand(data_matrix *m, float min, float max) {
+
+    int i, j;
+    float r;
+
+    for (i = 0; i < m->num_rows; i++) {
+
+        for (j = 0; j < m->num_cols; j++) {
+
+            r = ((float) rand()) / ((float) RAND_MAX);
+
+            r *= (max - min);
+
+            r += min;
+
+            m->data[i * m->num_cols + j] = r;
+
+        }
+
+    }
+
+}

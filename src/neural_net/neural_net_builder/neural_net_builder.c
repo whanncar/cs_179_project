@@ -44,6 +44,11 @@ neural_net *new_neural_net(neural_net_config *config) {
         ((new_net->layer_ptrs)[i])->weights =
             new_data_matrix(current_layer_config->number_of_weights,
                             current_layer_config->input_vector_size);
+
+
+        /* Allocate space for weight multipliers */
+        new_net->weight_multipliers =
+            new_vector(current_layer_config->number_of_weights);
     }
 
 
