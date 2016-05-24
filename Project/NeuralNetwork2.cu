@@ -19,41 +19,6 @@ const char* getfield(char* line, int num)
     return NULL;
 }
 
-int myvar;
-data_vector myVar;
-
-
-typedef struct {
-
-    int size;
-    float * d;
-
-} data_vector;
-
-typedef struct {
-
-    int num_rows;
-    int num_cols;
-    float ** d;
-
-} data_matrix;
-
-data_matrix * initializeArray(int r, int c)
-{
-	data_matrix *new_matrix;
-
-	new_matrix = (data_matrix *) malloc(sizeof(data_matrix));
-
-	new_matrix->num_rows = r;
-	new_matrix->num_cols = c;
-
-	new_matrix->d = (float **) malloc(r * sizeof(float *));
-
-	for(int i = 0; i < r; i++)
-	{
-		new_matrix->d[i] = (float *) malloc(c * sizeof(float));
-	}
-}
 
 
 void getDataFromFile(char * inputFile, float * labels, float * data, int numRows, int numCols)
@@ -64,7 +29,12 @@ void getDataFromFile(char * inputFile, float * labels, float * data, int numRows
 	int   err  = -1;
 	FILE *fstream  = fopen(inputFile,"r");
 
-	//printf("Read training data from File\n");
+	if(fstream == NULL)
+	{
+		printf("File read error on opening\n");
+	}
+
+	printf("Begin read training data from File\n");
 	while(((line=fgets(buffer,sizeof(buffer),fstream))!=NULL) && (i < numRows))
 	{
 		record = strtok(line,",");
@@ -96,15 +66,6 @@ void getDataFromFile(char * inputFile, float * labels, float * data, int numRows
 	}
 }
 
-//trainLabels must be allocated using calloc as this assume the array is already 0
-void createTrainLabels(float *trainLabels, float * labels, int numRows, int numCols)
-{
-	for(int i = 0; i < numRows; i++)
-	{
-		//trainLabels[i*numClasses + labels[i]] = 1;
-		trainLabels[i*numCols + (int)labels[i]] = 1;
-	}
-}
 
 void multiplyArrays(float * C, float * A, float * B, int r1, int c1, int r2, int c2)
 {
@@ -188,18 +149,27 @@ void findMax(float * labelEst, float *  Xout, int numTestSamples, int numOutputN
 
 	for(i = 0; i < numTestSamples; i++)
 	{
-		max = Xout[numOutputNeurons * i + 0];
+		max = Xout[i];
 		maxIdx = 0;
 		//Find output that network estimates as most likely 
 		//The last neuron is a residual bias unit that must be ignored
-		for(j = 1; j < numOutputNeurons - 1; j++)
+		for(j = 1; j < numOutputNeurons; j++)
 		{
-			if(max < Xout[numOutputNeurons * i  + j])
+			if(max < Xout[numTestSamples * j  + i])
 			{
-				max = Xout[numOutputNeurons * i  + j];
+				max = Xout[numTestSamples * j  + i];
 				maxIdx = (float)j;
+				
+			}
+			if(i < 10)
+			{
+				printf(" %f %f %f %d %d\n", max, maxIdx, Xout[numOutputNeurons * i  + j], i, j);
 			}
 		}
+		/*if(i < 10)
+		{
+			printf("\n");
+		}*/
 		labelEst[i] = maxIdx;
 	}
 }
@@ -270,7 +240,7 @@ void subtractArrays(float * C, float * A, float * B, int r, int c)
 }
 
 void transpose(float * C, float * A, int r, int c)
-{
+{	
 	for(int i = 0; i < r; i++)
 	{
 		for(int j = 0; j < c; j++)
@@ -293,9 +263,9 @@ void scalarMultiply(float * C, float * A, float num, int r, int c)
 	}
 }
 
-void initialize_X(struct  Array * X, int neuronsPerLayer, int numTestSamples)
+void initialize_X(data_matrix * X, int * neuronsPerLayer, int numTestSamples, int numLayers)
 {
-	for(i = 0; i < NUM_LAYERS + 1; i++)
+	for(int i = 0; i < numLayers; i++)
 	{
 		if(i == 0)
 		{
@@ -303,23 +273,26 @@ void initialize_X(struct  Array * X, int neuronsPerLayer, int numTestSamples)
 			X[i].c = numTestSamples; 
 			X[i].w = (float *)malloc(X[i].r * X[i].c * sizeof(float));
 		}
-
-		if(i == NUM_LAYERS - 1) //if last layer don't have bias term
-		{
-			X[i+1].r = neuronsPerLayer[i]; //No extra bias term
-		}
 		else
 		{
-			X[i+1].r = neuronsPerLayer[i] + 1; //add bias term
+			if(i == numLayers - 1) //if last layer don't have bias term
+			{
+				X[i].r = neuronsPerLayer[i- 1]; //No extra bias term
+			}
+			else
+			{
+				X[i].r = neuronsPerLayer[i-1] + 1; //add bias term
+			}
+			X[i].c = numTestSamples; 
+
+			X[i].w = (float *)malloc(X[i].r * X[i].c* sizeof(float));
 		}
-		X[i+1].c = numTestSamples; 
-		X[i+1].w = (float *)malloc(X[i+1].r * X[i+1].c* sizeof(float));
 	}
 }
 
-void initialize_W(struct Array * W, int neuronsPerLayer, int numTestSamples)
+void initialize_W(data_matrix * weights, int * neuronsPerLayer, int numTestSamples)
 {
-	for(i = 0; i < NUM_LAYERS + 1; i++)
+	for(int i = 0; i < NUM_LAYERS + 1; i++)
 	{
 		weights[i].r = neuronsPerLayer[i]; 		//n_neurons
 
@@ -334,9 +307,9 @@ void initialize_W(struct Array * W, int neuronsPerLayer, int numTestSamples)
 	}
 }
 
-void initialize_layerSum(struct Array *layerSum, int neuronsPerLayer, int numTestSamples)
+void initialize_layerSum(data_matrix *layerSum, int * neuronsPerLayer, int numTestSamples)
 {
-	for(i = 0; i < NUM_LAYERS + 1; i++)
+	for(int i = 0; i < NUM_LAYERS + 1; i++)
 	{
 
 		layerSum[i].r = neuronsPerLayer[i]; //no bias term
@@ -346,13 +319,108 @@ void initialize_layerSum(struct Array *layerSum, int neuronsPerLayer, int numTes
 	}
 }
 
-void initialize_dl(struct Array * dl, int neuronsPerLayer, int numTestSamples)
+void initialize_dl(data_matrix * dl, int * neuronsPerLayer, int numTestSamples)
 {
-	for(i = 0; i < NUM_LAYERS + 1; i++)
+	for(int i = 0; i < NUM_LAYERS + 1; i++)
 	{
-
 		dl[i].r = numTestSamples;
 		dl[i].c = neuronsPerLayer[i];
 		dl[i].w = (float *)malloc(dl[i].r * dl[i].c* sizeof(float));
 	}
 }
+
+void checkMem(void * pointer)
+{
+	if(pointer == NULL)
+	{
+		printf("Error memory pointer was NULL");
+	}
+}
+
+void initialize_trainLabels(data_matrix * trainLabels, float * labels, int lastLayerNeurons, int numTestSamples)
+{
+	trainLabels->r = lastLayerNeurons;
+	trainLabels->c = numTestSamples;
+	trainLabels->w = (float *) malloc(trainLabels->r*trainLabels->c *sizeof(float));
+
+	checkMem((void *)trainLabels->w);
+
+	printf("beforeCreatelabels\n");
+	for(int i = 0; i < trainLabels->c; i++)
+	{
+		//trainLabels[i*numClasses + labels[i]] = 1;
+		//trainLabels[i*numCols + (int)labels[i]] = 1;
+		//A little mind warping but this accesses by columns rather than rows
+		//
+		//printf("%d ",i);
+		//printf("%d ",(int)labels[i]);
+		//printf("%d ",i + (int)labels[i]*(trainLabels->c));
+		if(i + (int)labels[i]*(trainLabels->c) < 0)
+		{
+			printf("lessthanzero\n");
+		}
+		trainLabels->w[i + (int)labels[i]*(trainLabels->c)] = 1;
+		//printf("%d %f\n",i,trainLabels->w[i + (int)labels[i]*(trainLabels->c)]);
+		//printf("%d %f\n",i,trainLabels[i + (int)labels[i]*cols]);
+	}
+	//createTrainLabels(trainLabels->w, labels, trainLabels->r, trainLabels->c);
+}
+
+//trainLabels must be allocated using calloc as this assume the array is already 0
+void createTrainLabels(float *trainLabels, float * labels, int rows, int cols)
+{
+	
+}
+
+void free_data_matrix(data_matrix * X, int numLayers)
+{
+	for(int i = 0; i < numLayers; i++)
+	{
+		free(X[i].w);
+	}
+	free(X);
+}
+
+/*data_vector myVar;
+
+typedef struct {
+
+    int r;
+    float * d;
+
+} data_vector;
+
+typedef struct {
+
+    int r;
+    int c;
+    float * d;
+
+} data_matrix;*/
+
+/*
+typedef struct {
+
+    int num_rows;
+    int num_cols;
+    float ** d;
+
+} data_matrix;
+
+data_matrix * initializeArray(int r, int c)
+{
+	data_matrix *new_matrix;
+
+	new_matrix = (data_matrix *) malloc(sizeof(data_matrix));
+
+	new_matrix->num_rows = r;
+	new_matrix->num_cols = c;
+
+	new_matrix->d = (float **) malloc(r * sizeof(float *));
+
+	for(int i = 0; i < r; i++)
+	{
+		new_matrix->d[i] = (float *) malloc(c * sizeof(float));
+	}
+}
+*/

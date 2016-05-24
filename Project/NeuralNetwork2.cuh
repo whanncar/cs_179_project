@@ -26,6 +26,21 @@ struct Array{
    float * w;
 };
 
+typedef struct {
+
+    int r;
+    float * d;
+
+} data_vector;
+
+typedef struct {
+
+    int r;
+    int c;
+    float * w;
+
+} data_matrix;
+
 
 #define IMG_LEN (784)
 #define NUM_LAYERS 3
@@ -34,7 +49,7 @@ const char* getfield(char* line, int num);
 
 void getDataFromFile(char * inputFile, float * labels, float * data, int numRows, int numCols);
 
-void createTrainLabels(float *trainLabels, float * labels, int numRows, int numClasses);
+void createTrainLabels(float *trainLabels, float * labels, int rows, int cols);
 
 void multiplyArrays(float * C, float * A, float * B, int r1, int c1, int r2, int c2);
 
@@ -60,12 +75,20 @@ void transpose(float * C, float * A, int r, int c);
 
 void scalarMultiply(float * C, float * A, float num, int r, int c);
 
-void initialize_X(struct X, int neuronsPerLayer, int numTestSamples);
+void initialize_X(data_matrix * X, int * neuronsPerLayer, int numTestSamples, int numLayers);
 
-void initialize_W(struct W, int neuronsPerLayer, int numTestSamples);
+void initialize_W(data_matrix * W, int *neuronsPerLayer, int numTestSamples);
 
-void initialize_layerSum(struct layerSum, int neuronsPerLayer, int numTestSamples);
+void initialize_layerSum(data_matrix * layerSum, int *neuronsPerLayer, int numTestSamples);
 
-void initialize_dl(struct dl, int neuronsPerLayer, int numTestSamples);
+void initialize_dl(data_matrix * dl, int *neuronsPerLayer, int numTestSamples);
+
+void initialize_trainLabels(data_matrix * trainLabels, float * labels, 
+	int lastLayerNeurons, int numTestSamples);
+
+void free_data_matrix(data_matrix * X, int numLayers);
+
+void checkMem(void * pointer);
+
 
 #endif // CPU_NEURAL_NET_CUH
