@@ -1,4 +1,3 @@
-#include "../utils/utils.h"
 #include "neural_net.h"
 #include <math.h>
 
@@ -81,7 +80,7 @@ void calculate_dL_ds_layer(neural_layer *layer,
                                    next_layer->t,
                                    layer->dL_ds_local);
 
-    compute_matrix_times_vector(next_layer->w_T,
+    calculate_matrix_times_vector(next_layer->w_T,
                                 layer->dL_ds_local,
                                 layer->dL_ds_local);
 
@@ -97,7 +96,7 @@ void calculate_dL_ds_layer(neural_layer *layer,
 
     multiply_vectors_componentwise(next_layer->input,
                                    layer->dL_ds_local,
-                                   layer->dL_ds);
+                                   layer->dL_ds_local);
 
     add_constant_componentwise_to_vector(next_layer->input, -1,
                                          next_layer->input);
@@ -125,7 +124,7 @@ void compute_dL_ds_last_layer(neural_net *nn, data_vector *expected_output) {
 
     add_vectors(last_layer->output, expected_output, last_layer->dL_ds_local);
 
-    multiply_vector_by_constant(last_layer->dL_ds, 2, last_layer->dL_ds_local);
+    multiply_vector_by_constant(last_layer->dL_ds_local, 2, last_layer->dL_ds_local);
 
     multiply_vectors_componentwise(last_layer->dL_ds_local,
                                    last_layer->output,
@@ -161,7 +160,7 @@ void compute_dL_ds_all_layers(neural_net *nn,
     compute_dL_ds_last_layer(nn, expected_output);
 
     for (i = nn->num_layers - 2; i >= 0; i--) {
-        compute_dL_ds_layer(nn->layer_ptrs[i], nn->layer_ptrs[i + 1]);
+        calculate_dL_ds_layer(nn->layer_ptrs[i], nn->layer_ptrs[i + 1]);
     }
 }
 
@@ -304,13 +303,13 @@ float calculate_sample_loss(neural_net *nn, sample *s) {
 
     result = 0;
 
-    set_neural_net_input(nn, sample->input);
+    set_neural_net_input(nn, s->input);
 
     forward_propagate_neural_net(nn);
 
     for (i = 0; i < nn->output->size; i++) {
 
-        diff = nn->output->data[i] - sample->expected_output->data[i];
+        diff = nn->output->data[i] - s->expected_output->data[i];
 
         result += diff * diff;
 

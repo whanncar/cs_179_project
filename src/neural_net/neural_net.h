@@ -1,3 +1,7 @@
+
+#ifndef NEURAL_NET_H
+#define NEURAL_NET_H
+
 #include "../utils/utils.h"
 
 /* Structs */
@@ -59,3 +63,5 @@ typedef struct {
 void train_neural_net(neural_net *, sample_set *, float step);
 
 float calculate_loss(neural_net *, sample_set *);
+
+#endif /* NEURAL_NET_H */

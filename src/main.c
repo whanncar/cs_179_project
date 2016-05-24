@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "./neural_net/neural_net.h" 
-
+#include "io_utils/fileio.h"
 
 
 neural_net *nn;
 sample_set *samples;
 
-build_neural_net_from_cmds(int, char **);
+void build_neural_net_from_cmds(int, char **);
 
 
 int main(int argc, char **argv) {
@@ -17,12 +17,12 @@ int main(int argc, char **argv) {
     float epsilon;
     float lambda;
 
-    epsilon = .000001;
+    epsilon = .1;
     lambda = .0001;
 
     build_neural_net_from_cmds(argc, argv);
 
-    /* Get samples from file */
+    samples = get_samples_from_file("../training_data/mnist_test.csv", 10, 784);    
    
     old_loss = calculate_loss(nn, samples);
 
@@ -106,8 +106,8 @@ void build_neural_net_from_cmds(int argc, char **argv) {
 
         fill_matrix_rand(nn->layer_ptrs[i]->w, -.5, .5);
 
-        nn->layer_ptrs[i]->w_T = new_matrix(nn->layer_ptrs[i]->num_cols,
-                                            nn->layer_ptrs[i]->num_rows);
+        nn->layer_ptrs[i]->w_T = new_matrix(nn->layer_ptrs[i]->w->num_cols,
+                                            nn->layer_ptrs[i]->w->num_rows);
 
         compute_matrix_transpose(nn->layer_ptrs[i]->w, nn->layer_ptrs[i]->w_T);
     }
