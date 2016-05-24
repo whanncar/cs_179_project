@@ -37,7 +37,7 @@ void calculate_matrix_times_vector(data_matrix *,
 
 void multiply_vector_by_constant(data_vector *, float, data_vector *result);
 
-void add_vectors(data_vector *, data_vector *, data_vector *result)
+void add_vectors(data_vector *, data_vector *, data_vector *result);
 
 void compute_additive_inverse_of_vector(data_vector *, data_vector *result);
 
@@ -51,7 +51,7 @@ void compute_matrix_transpose(data_matrix *, data_matrix *result);
 
 void apply_filter_to_vector_componentwise(data_vector *,
                                           float (*filter)(float),
-                                          data_vector *result) {
+                                          data_vector *result);
 
 
 void fill_matrix_rand(data_matrix *, float min, float max);

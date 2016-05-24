@@ -195,7 +195,7 @@ void compute_matrix_transpose(data_matrix *m, data_matrix *result) {
 
     for (i = 0; i < m->num_rows; i++) {
 
-        for (j = 0; j < num_cols; j++) {
+        for (j = 0; j < m->num_cols; j++) {
 
             result->data[j * result->num_cols + i] = m->data[i * m->num_cols + j];
 

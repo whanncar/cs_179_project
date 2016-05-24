@@ -12,8 +12,49 @@
 int *get_data(char *line, int sample_length) {
 
     int *data;
+    int i, j;
+    char *temp;
 
     data = (int *) malloc(sample_length * sizeof(int)); 
+
+    i = 0;
+
+    for (j = 0; line[j] != '\0'; j++) {
+
+        if (line[j] == ',') {
+            data[i] = j;
+            i++;
+        }
+
+    }
+
+    for (i = 0; i < sample_length - 1; i++) {
+
+        temp = (char *) malloc((data[i + 1] - data[i]) * sizeof(char));
+
+        for (j = 0; j < data[i + 1] - data[i] - 1; j++) {
+            temp[j] = line[j + data[i] + 1];
+        }
+
+        temp[j] = '\0';
+
+        data[i] = atoi(temp);
+
+    }
+
+    for (j = data[sample_length - 1]; line[j] != '\0'; j++);
+
+    temp = (char *) malloc((j - data[sample_length - 1]) * sizeof(char));
+
+    for (; j > data[sample_length - 1]; j--) {
+
+        temp[j - data[sample_length - 1] - 1] = line[j];
+
+    }
+
+    data[sample_length - 1] = atoi(temp);
+
+    return data;
 
 }
 
@@ -58,7 +99,7 @@ sample_set *get_samples_from_file(char *filepath,
 
         samples->sample_ptrs[i] = (sample *) malloc(sizeof(sample));
         samples->sample_ptrs[i]->input = new_vector(sample_length);
-        samples->sample_ptrs[i]->output = new_vector(NUM_DIGITS);
+        samples->sample_ptrs[i]->expected_output = new_vector(NUM_DIGITS);
     }
 
     fstream = fopen(filepath, "r");
@@ -75,15 +116,15 @@ sample_set *get_samples_from_file(char *filepath,
 
         for (j = 0; j < NUM_DIGITS; j++) {
             if (j == label) {
-                samples->sample_ptrs[i]->output[j] = 1;
+                samples->sample_ptrs[i]->expected_output->data[j] = 1;
             }
             else {
-                samples->sample_ptrs[i]->output[j] = 0;
+                samples->sample_ptrs[i]->expected_output->data[j] = 0;
             }
         }
 
         for (j = 0; j < samples->sample_ptrs[i]->input->size; j++) {
-            sample_ptrs[i]->input->data[j] = (float) data[j];
+            samples->sample_ptrs[i]->input->data[j] = (float) data[j];
         }
 
         free(data);
