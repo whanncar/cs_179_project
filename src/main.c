@@ -22,9 +22,11 @@ int main(int argc, char **argv) {
 
     build_neural_net_from_cmds(argc, argv);
 
-    samples = get_samples_from_file("../training_data/mnist_test.csv", 10, 784);    
-   
+    samples = get_samples_from_file("training_data/mnist_test.csv", 10, 784);   
+
     old_loss = calculate_loss(nn, samples);
+
+printf("%f\n", old_loss);
 
     new_loss = old_loss + 1;
 
@@ -35,6 +37,8 @@ int main(int argc, char **argv) {
         train_neural_net(nn, samples, lambda);
 
         new_loss = calculate_loss(nn, samples); 
+
+        printf("%f\n", new_loss);
 
     }
  
