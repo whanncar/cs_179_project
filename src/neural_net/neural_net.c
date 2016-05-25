@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "neural_net.h"
 #include <math.h>
 
@@ -326,6 +327,40 @@ float calculate_sample_loss(neural_net *nn, sample *s) {
  *
  */
 
+int predict(neural_net *nn, sample *s) {
+
+    int i, max_index;
+    float max;
+
+    set_neural_net_input(nn, s->input);
+
+    forward_propagate_neural_net(nn);
+
+    max = nn->output->data[0];
+    max_index = 0;
+
+    for (i = 1; i < nn->output->size; i++) {
+
+        if (nn->output->data[i] > max) {
+
+            max = nn->output->data[i];
+            max_index = i;
+
+        }
+
+    }
+
+    return max_index;
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
 float calculate_loss(neural_net *nn, sample_set *set) {
 
     int i;
@@ -338,5 +373,36 @@ float calculate_loss(neural_net *nn, sample_set *set) {
         result += calculate_sample_loss(nn, set->sample_ptrs[i]);
 
     }
+
+    return result;
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+float calculate_percent_predicted_correctly(neural_net *nn, sample_set *set) {
+
+    int i;
+    int prediction;
+    float count;
+
+    count = 0;
+
+    for (i = 0; i < set->num_samples; i++) {
+
+        prediction = predict(nn, set->sample_ptrs[i]);
+
+        if (set->sample_ptrs[i]->expected_output->data[prediction]) {
+            count++;
+        }
+
+    }
+
+    return 100 * count / ((float) set->num_samples);
 
 }

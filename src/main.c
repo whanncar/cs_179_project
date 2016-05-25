@@ -18,11 +18,11 @@ int main(int argc, char **argv) {
     float lambda;
 
     epsilon = .1;
-    lambda = .0001;
+    lambda = .00000001;
 
     build_neural_net_from_cmds(argc, argv);
 
-    samples = get_samples_from_file("training_data/mnist_test.csv", 10, 784);   
+    samples = get_samples_from_file("training_data/mnist_test.csv", 3000, 784);   
 
     old_loss = calculate_loss(nn, samples);
 
@@ -38,7 +38,7 @@ printf("%f\n", old_loss);
 
         new_loss = calculate_loss(nn, samples); 
 
-        printf("%f\n", new_loss);
+        printf("%f, %f\n", new_loss, calculate_percent_predicted_correctly(nn, samples));
 
     }
  
@@ -54,7 +54,7 @@ printf("%f\n", old_loss);
 
 void build_neural_net_from_cmds(int argc, char **argv) {
 
-    int i;
+    int i, j;
     int num_layers;
     int *layer_specs;
 
@@ -100,6 +100,10 @@ void build_neural_net_from_cmds(int argc, char **argv) {
         nn->layer_ptrs[i]->s = new_vector(nn->layer_ptrs[i]->output->size);
         nn->layer_ptrs[i]->dL_ds_local = new_vector(nn->layer_ptrs[i]->output->size);
         nn->layer_ptrs[i]->dL_ds_global = new_vector(nn->layer_ptrs[i]->output->size);
+
+        for (j = 0; j < nn->layer_ptrs[i]->t->size; j++) {
+            nn->layer_ptrs[i]->t->data[j] = 1;
+        }
 
     }
 
