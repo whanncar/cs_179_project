@@ -1,59 +1,25 @@
+#include "../../../src/utils/utils.h"
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef UTILS_CUH
+#define UTILS_CUH
 
-/* Structs */
+data_vector *gpu_new_vector(int size);
 
-typedef struct {
+data_matrix *gpu_new_matrix(int num_rows, int num_cols);
 
-    int size;
+void gpu_multiply_vector_by_constant(data_vector *, float,
+                                     data_vector *result)
 
-    float *data;
+void gpu_add_vectors(data_vector *, data_vector *, data_vector *result);
 
-} data_vector;
+void gpu_compute_additive_inverse_of_vector(data_vector *, data_vector *result);
 
+void gpu_add_constant_componentwise_to_vector(data_vector *v, float c,
+                                              data_vector *result);
 
-
-typedef struct {
-
-    int num_rows;
-    int num_cols;
-
-    float *data;
-
-} data_matrix;
+void gpu_multiply_vectors_componentwise(data_vector *, data_vector *,
+                                        data_vector *result);
 
 
 
-/* Functions */
-
-data_vector *new_vector(int size);
-
-data_matrix *new_matrix(int num_rows, int num_cols);
-
-void calculate_matrix_times_vector(data_matrix *,
-                                   data_vector *,
-                                   data_vector *result);
-
-void multiply_vector_by_constant(data_vector *, float, data_vector *result);
-
-void add_vectors(data_vector *, data_vector *, data_vector *result);
-
-void compute_additive_inverse_of_vector(data_vector *, data_vector *result);
-
-void add_constant_componentwise_to_vector(data_vector *, float,
-                                          data_vector *result);
-
-void multiply_vectors_componentwise(data_vector *, data_vector *,
-                                    data_vector *result);
-
-void compute_matrix_transpose(data_matrix *, data_matrix *result);
-
-void apply_filter_to_vector_componentwise(data_vector *,
-                                          float (*filter)(float),
-                                          data_vector *result);
-
-
-void fill_matrix_rand(data_matrix *, float min, float max);
-
-#endif /* UTILS_H */
+#endif /* UTILS_CUH */

@@ -75,29 +75,47 @@ data_matrix *gpu_new_matrix(int num_rows, int num_cols) {
  */
 
 __global__
-void calculate_matrix_times_vector_kernel(data_matrix *m,
-                                          data_vector *v,
-                                          data_vector *result) {
+void calculate_matrix_times_vector_kernel(float *mat,
+                                          float *vec,
+                                          float *result,
+                                          int mat_rows,
+                                          int mat_cols) {
 
+    int index;
+    int j;
+    int mat_length = mat_rows * mat_cols;
 
+    float mat_entry;
+    float vec_entry;
+    float loc_res_entry;
 
-    /* TODO UNRESOLVED */
+    extern __shared__ float local_result[];
 
+    /* Zero out the shared memory */
 
+    for (index = threadIdx.x;
+         index < mat_length;
+         index += blockDim.x) {
 
-
-    int i, j;
-
-    /* Put an assertion UNRESOLVED */
-
-    for (i = 0; i < m->num_rows; i++) {
-
-        result->data[i] = 0;
-
-        for (j = 0; j < m->num_cols; j++) {
-            result->data[i] += m->data[i * m->num_cols + j] * v->data[j];
-        }
+        local_result[index] = 0;
     }
+
+    /* Compute matrix of terms */
+
+    for (index = blockDim.x * blockIdx.x + threadIdx.x;
+         index < mat_length;
+         index += gridDim.x * blockDim.x) {
+
+        j = index % mat_cols;
+
+        mat_entry = mat[index];
+        vec_entry = vec[j];
+        
+        local_result[index] = mat_entry * vec_entry;
+
+    }
+
+    /* TODO: Compactify and atomically add UNRESOLVED */
 
 }
 
@@ -144,7 +162,7 @@ void gpu_multiply_vector_by_constant(data_vector *v, float c,
     }
 
 
-    multiply_vector_by_constant_kernel<<<threads_per_block, blocks>>>
+    multiply_vector_by_constant_kernel<<<blocks, threads_per_block>>>
         (v->data, c, result->data, v->size);
 
 }
@@ -193,7 +211,7 @@ void gpu_add_vectors(data_vector *v1, data_vector *v2, data_vector *result) {
         blocks++;
     }
 
-    add_vectors_kernel<<<threads_per_block, blocks>>>
+    add_vectors_kernel<<<blocks, threads_per_block>>>
         (v1->data, v2->data, result->data, v1->size);
 
 }
@@ -239,7 +257,7 @@ void gpu_compute_additive_inverse_of_vector(data_vector *v, data_vector *result)
     }
 
 
-    compute_additive_inverse_of_vector_kernel<<<threads_per_block, blocks>>>
+    compute_additive_inverse_of_vector_kernel<<<blocks, threads_per_block>>>
         (v->data, result->data, v->size);
 
 }
@@ -289,47 +307,30 @@ void gpu_add_constant_componentwise_to_vector(data_vector *v, float c,
         blocks++;
     }
 
-    add_constant_componentwise_to_vector_kernel<<<threads_per_block, blocks>>>
+    add_constant_componentwise_to_vector_kernel<<<blocks, threads_per_block>>>
         (v->data, c, result->data, v->size);   
 
 }
 
 
 
-/*
- * UNRESOLVED
- *
- */
+__global__
+void multiply_vectors_componentwise_kernel(float *v1, float *v2,
+                                           float *result, int v_size) {
 
-void multiply_vectors_componentwise(data_vector *v1, data_vector *v2,
-                                    data_vector *result) {
+    int index;
+    float temp1, temp2, tempres;
 
-    int i;
+    for (index = blockDim.x * blockIdx.x + threadIdx.x;
+         index < v_size;
+         index += gridDim.x * blockDim.x) {
 
-    for (i = 0; i < v1->size; i++) {
-        result->data[i] = v1->data[i] * v2->data[i];
-    }
+        temp1 = v1[index];
+        temp2 = v2[index];
 
-}
+        tempres = temp1 * temp2;
 
-
-
-/*
- * UNRESOLVED
- *
- */
-
-void compute_matrix_transpose(data_matrix *m, data_matrix *result) {
-
-    int i, j;
-
-    for (i = 0; i < m->num_rows; i++) {
-
-        for (j = 0; j < m->num_cols; j++) {
-
-            result->data[j * result->num_cols + i] = m->data[i * m->num_cols + j];
-
-        }
+        result[index] = tempres;
 
     }
 
@@ -337,49 +338,23 @@ void compute_matrix_transpose(data_matrix *m, data_matrix *result) {
 
 
 
-/*
- * UNRESOLVED
- *
- */
+void gpu_multiply_vectors_componentwise(data_vector *v1, data_vector *v2,
+                                        data_vector *result) {
 
-void apply_filter_to_vector_componentwise(data_vector *v,
-                                          float (*filter)(float),
-                                          data_vector *result) {
+    int threads_per_block;
+    int blocks;
 
-    int i;
+    threads_per_block = 512;
 
-    for (i = 0; i < v->size; i++) {
-        result->data[i] = filter(v->data[i]);
+    blocks = v->size / threads_per_block;
+
+    if (v->size % threads_per_block) {
+        blocks++;
     }
+
+    multiply_vectors_componentwise_kernel<<<blocks, threads_per_block>>>
+        (v1->data, v2->data, result->data, v1->size);
 
 }
 
 
-
-/*
- * UNRESOLVED
- *
- */
-
-void fill_matrix_rand(data_matrix *m, float min, float max) {
-
-    int i, j;
-    float r;
-
-    for (i = 0; i < m->num_rows; i++) {
-
-        for (j = 0; j < m->num_cols; j++) {
-
-            r = ((float) rand()) / ((float) RAND_MAX);
-
-            r *= (max - min);
-
-            r += min;
-
-            m->data[i * m->num_cols + j] = r;
-
-        }
-
-    }
-
-}
