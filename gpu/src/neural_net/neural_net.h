@@ -13,12 +13,16 @@ typedef struct {
     data_matrix *w;
     data_matrix *w_T;
 
+    data_vector *r;
+
+    data_vector *t;
+
     data_vector *s;
 
     data_vector *output;
 
     data_vector *dL_ds_local;
-    data_matrix *dL_dw;
+    data_vector *dL_ds_global;
 
 } neural_layer;
 
