@@ -49,6 +49,11 @@ void calculate_matrix_times_matrix(data_matrix *m1,
 
     int m1_rows, m1_cols, m2_cols;
 
+    assert(m1->num_cols == m2->num_rows);
+    assert(m1->num_rows == result->num_rows);
+    assert(m2->num_cols == result->num_cols);
+
+
     m1_rows = m1->num_rows;
     m1_cols = m1->num_cols;
     m2_cols = m2->num_cols;
@@ -80,6 +85,9 @@ void calc_lin_comb_of_mats(float a, data_matrix *m1,
     int i, j;
 
     int rows, cols;
+
+    assert(m1->num_rows == m2->num_rows);
+    assert(m1->num_cols == m2->num_cols);
 
     rows = m1->num_rows;
     cols = m1->num_cols;
@@ -126,6 +134,9 @@ void multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matr
 
     int rows, cols;
 
+    assert(m1->num_rows == m2->num_rows);
+    assert(m1->num_cols == m2->num_cols);
+
     rows = m1->num_rows;
     cols = m1->num_cols;
 
@@ -150,6 +161,9 @@ void multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matr
 void compute_matrix_transpose(data_matrix *m, data_matrix *result) {
 
     int i, j;
+
+    assert(m->num_rows == result->num_cols);
+    assert(m->num_cols == result->num_rows);
 
     for (i = 0; i < m->num_rows; i++) {
 
@@ -230,6 +244,9 @@ float calculate_matrix_distance(data_matrix *m1, data_matrix *m2) {
     int i, j;
     int rows, cols;
     float result, diff;
+
+    assert(m1->num_rows == m2->num_rows);
+    assert(m1->num_cols == m2->num_cols);
 
     rows = m1->num_rows;
     cols = m1->num_cols;

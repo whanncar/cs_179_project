@@ -12,6 +12,8 @@ char usage[] = "usage: <number of samples> <sample length> <label length> "
 
 void initialize_neural_net(int, char **);
 void initialize_samples(int, char **);
+void print_output(neural_net *);
+
 
 int main(int argc, char **argv) {
 
@@ -33,11 +35,40 @@ int main(int argc, char **argv) {
     while (1) {
 
         train_neural_net(nn, samples, lambda);
-        loss = calculate_loss(nn, samples); 
+        loss = calculate_loss(nn, samples);
+        print_output(nn); 
         printf("%f, %f\n", loss, calculate_percent_predicted_correctly(nn, samples));
     }
 
     return 0;
+}
+
+
+void print_output(neural_net *net) {
+
+    data_matrix *output;
+
+    output = net->output;
+
+    int i, j;
+
+    int rows, cols;
+
+    rows = output->num_rows;
+    cols = output->num_cols;
+
+    for (i = 0; i < rows; i++) {
+
+        for (j = 0; j < cols; j++) {
+
+            printf("%f ", output->data[i * cols + j]);
+
+        }
+
+        printf("\n");
+
+    }
+
 }
 
 

@@ -87,9 +87,9 @@ void calculate_dL_ds_layer(neural_layer *layer,
 
     temp = new_matrix(next_layer->input->num_rows, next_layer->input->num_cols);
 
-    calc_lin_comb_of_mats(0, next_layer->input, -1, next_layer->input, temp);
+    calc_lin_comb_of_mats(0.0, next_layer->input, -1.0, next_layer->input, temp);
 
-    add_constant_to_matrix(1, temp, temp);
+    add_constant_to_matrix(1.0, temp, temp);
 
     multiply_matrices_componentwise(temp, layer->dL_ds, layer->dL_ds);
 
@@ -112,17 +112,17 @@ void compute_dL_ds_last_layer(neural_net *nn, data_matrix *expected_output) {
     last_layer = nn->layer_ptrs[nn->num_layers - 1];
 
 
-    calc_lin_comb_of_mats(1, last_layer->output, -1, expected_output, last_layer->dL_ds);
+    calc_lin_comb_of_mats(1.0, last_layer->output, -1.0, expected_output, last_layer->dL_ds);
 
-    calc_lin_comb_of_mats(0, last_layer->dL_ds, 2, last_layer->dL_ds, last_layer->dL_ds);
+    calc_lin_comb_of_mats(0.0, last_layer->dL_ds, 2.0, last_layer->dL_ds, last_layer->dL_ds);
 
     multiply_matrices_componentwise(last_layer->dL_ds, last_layer->output, last_layer->dL_ds);
 
     temp = new_matrix(last_layer->output->num_rows, last_layer->output->num_cols);
 
-    calc_lin_comb_of_mats(0, last_layer->output, -1, last_layer->output, temp);
+    calc_lin_comb_of_mats(0.0, last_layer->output, -1.0, last_layer->output, temp);
 
-    add_constant_to_matrix(1, temp, temp);
+    add_constant_to_matrix(1.0, temp, temp);
 
     multiply_matrices_componentwise(last_layer->dL_ds, temp, last_layer->dL_ds);
 
