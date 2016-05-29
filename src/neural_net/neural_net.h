@@ -18,7 +18,7 @@ typedef struct {
     data_vector *output;
 
     data_vector *dL_ds_local;
-    data_vector *dL_ds_global;
+    data_matrix *dL_dw;
 
 } neural_layer;
 

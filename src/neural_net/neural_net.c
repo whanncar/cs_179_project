@@ -161,68 +161,36 @@ void compute_dL_ds_all_layers(neural_net *nn,
 }
 
 
+void update_dL_dw_layer(neural_layer *layer) {
 
-/*
- * UNRESOLVED
- *
- */
+    int i, j;
 
-void add_dL_ds_local_to_dL_ds_global_all_layers(neural_net *nn) {
+    for (i = 0; i < layer->dL_dw->num_rows; i++) {
 
-    int i;
-    neural_layer *current_layer;
+        for (j = 0; j < layer->dL_dw->num_cols; j++) {
 
-    for (i = 0; i < nn->num_layers; i++) {
+            layer->dL_dw->data[i * layer->dL_dw->num_cols + j]
+                += layer->dL_ds_local->data[i] * layer->input->data[j];
 
-        current_layer = nn->layer_ptrs[i];
-
-        add_vectors(current_layer->dL_ds_local,
-                    current_layer->dL_ds_global,
-                    current_layer->dL_ds_global);
+        }
 
     }
 
 }
 
 
-
-/*
- * UNRESOLVED
- *
- */
-
-void update_t_layer(neural_layer *layer, float step) {
-
-    multiply_vectors_componentwise(layer->dL_ds_global,
-                                   layer->r, layer->dL_ds_global);
-
-    multiply_vector_by_constant(layer->dL_ds_global,
-                                step,
-                                layer->dL_ds_global);
-
-    compute_additive_inverse_of_vector(layer->dL_ds_global,
-                                       layer->dL_ds_global);
-
-    add_vectors(layer->t, layer->dL_ds_global, layer->t);
-
-}
-
-
-
-/*
- * UNRESOLVED
- *
- */
-
-void update_t_all_layers(neural_net *nn, float step) {
+void update_dL_dw_all_layers(neural_net *nn) {
 
     int i;
 
     for (i = 0; i < nn->num_layers; i++) {
-        update_t_layer(nn->layer_ptrs[i], step);
+
+        update_dL_dw_layer(nn->layer_ptrs[i]);
+
     }
 
 }
+
 
 
 
@@ -236,11 +204,42 @@ void backward_propagate_neural_net_single_sample(neural_net *nn,
 
     compute_dL_ds_all_layers(nn, expected_output);
 
-    add_dL_ds_local_to_dL_ds_global_all_layers(nn);
+    update_dL_dw_all_layers(nn);
 
 }
 
 
+void update_w_layer(neural_layer *layer, float step) {
+
+    int i, j;
+
+    for (i = 0; i < layer->w->num_rows; i++) {
+
+        for (j = 0; j < layer->w->num_cols; j++) {
+
+            layer->w->data[i * layer->w->num_cols + j] -=
+                            layer->dL_dw->data[i * layer->dL_dw->num_cols + j] * step;
+
+        }
+
+    }
+
+    compute_matrix_transpose(layer->w, layer->w_T);
+
+}
+
+
+void update_w_all_layers(neural_net *nn, float step) {
+
+    int i;
+
+    for (i = 0; i < nn->num_layers; i++) {
+
+        update_w_layer(nn->layer_ptrs[i], step);
+
+    }
+
+}
 
 /*
  * UNRESOLVED
@@ -258,6 +257,36 @@ void set_neural_net_input(neural_net *nn, data_vector *input) {
 }
 
 
+void set_dL_dw_to_zero_layer(neural_layer *layer) {
+
+    int i, j;
+
+    for (i = 0; i < layer->dL_dw->num_rows; i++) {
+
+        for (j = 0; j < layer->dL_dw->num_cols; j++) {
+
+            layer->dL_dw->data[i * layer->dL_dw->num_cols + j] = 0;
+
+        }
+
+    }
+
+}
+
+
+void set_dL_dw_to_zero_all_layers(neural_net *nn) {
+
+    int i;
+
+    for (i = 0; i < nn->num_layers; i++) {
+
+        set_dL_dw_to_zero_layer(nn->layer_ptrs[i]);
+
+    }
+
+}
+
+
 /*
  * UNRESOLVED
  *
@@ -267,6 +296,8 @@ void train_neural_net(neural_net *nn, sample_set *set, float step) {
 
     int i;
     sample *current_sample;
+
+    set_dL_dw_to_zero_all_layers(nn);
 
     for (i = 0; i < set->num_samples; i++) {
 
@@ -280,7 +311,7 @@ void train_neural_net(neural_net *nn, sample_set *set, float step) {
             current_sample->expected_output);
     }
 
-    update_t_all_layers(nn, step);
+    update_w_all_layers(nn, step);
 
 }
 

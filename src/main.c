@@ -30,7 +30,7 @@ printf("%f\n", old_loss);
 
     new_loss = old_loss + 1;
 
-    while ((old_loss - new_loss) * (old_loss - new_loss) > epsilon) {
+    while (/*(old_loss - new_loss) * (old_loss - new_loss) > epsilon*/ 1) {
 
         old_loss = new_loss;
 
@@ -95,15 +95,8 @@ void build_neural_net_from_cmds(int argc, char **argv) {
 
     for (i = 0; i < num_layers; i++) {
 
-        nn->layer_ptrs[i]->r = new_vector(nn->layer_ptrs[i]->output->size);
-        nn->layer_ptrs[i]->t = new_vector(nn->layer_ptrs[i]->output->size);
         nn->layer_ptrs[i]->s = new_vector(nn->layer_ptrs[i]->output->size);
         nn->layer_ptrs[i]->dL_ds_local = new_vector(nn->layer_ptrs[i]->output->size);
-        nn->layer_ptrs[i]->dL_ds_global = new_vector(nn->layer_ptrs[i]->output->size);
-
-        for (j = 0; j < nn->layer_ptrs[i]->t->size; j++) {
-            nn->layer_ptrs[i]->t->data[j] = 1;
-        }
 
     }
 
@@ -118,6 +111,10 @@ void build_neural_net_from_cmds(int argc, char **argv) {
                                             nn->layer_ptrs[i]->w->num_rows);
 
         compute_matrix_transpose(nn->layer_ptrs[i]->w, nn->layer_ptrs[i]->w_T);
+
+        nn->layer_ptrs[i]->dL_dw = new_matrix(nn->layer_ptrs[i]->w->num_rows,
+                                              nn->layer_ptrs[i]->w->num_cols);
+
     }
 
 }
