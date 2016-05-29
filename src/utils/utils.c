@@ -133,7 +133,7 @@ void multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matr
 
         for (j = 0; j < cols; j++) {
 
-            result->data[i * cols + j] = m1->data[i * cols + j] * m2->data[i * cols + j];
+            result->data[i * cols + j] = (m1->data[i * cols + j]) * (m2->data[i * cols + j]);
 
         }
 

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "neural_net.h"
 #include <math.h>
 
@@ -217,7 +218,22 @@ void backward_propagate_neural_net(neural_net *nn, data_matrix *expected_output,
 
 void set_neural_net_input(neural_net *nn, data_matrix *input) {
 
-    nn->input = input;
+    int i, j;
+
+    int rows, cols;
+
+    rows = nn->input->num_rows;
+    cols = nn->input->num_cols;
+
+    for (i = 0; i < rows; i++) {
+
+        for (j = 0; j < cols; j++) {
+
+            nn->input->data[i * cols + j] = input->data[i * cols + j];
+
+        }
+
+    }
 
 }
 
@@ -248,7 +264,7 @@ float calculate_loss(neural_net *nn, sample_set *set) {
 
     forward_propagate_neural_net(nn);
 
-    return calculate_matrix_distance(nn->output, set->sample_labels);;
+    return calculate_matrix_distance(nn->output, set->sample_labels);
 
 }
 
@@ -319,5 +335,96 @@ float calculate_percent_predicted_correctly(neural_net *nn, sample_set *set) {
     free_matrix(predictions);
 
     return 100 * count / ((float) set->sample_inputs->num_cols);
+
+}
+
+
+neural_layer *new_neural_layer(int input_length,
+                               int num_weights,
+                               int num_inputs) {
+
+    neural_layer *layer;
+
+    layer = (neural_layer *) malloc(sizeof(neural_layer));
+
+    layer->w = new_matrix(num_weights, input_length);
+
+    layer->w_T = new_matrix(input_length, num_weights);
+
+    layer->s = new_matrix(num_weights, num_inputs);
+
+    layer->output = new_matrix(num_weights, num_inputs);
+
+    layer->dL_ds = new_matrix(num_weights, num_inputs);
+
+    layer->dL_dw = new_matrix(num_weights, input_length);
+
+    return layer;
+
+}
+
+
+neural_net *new_neural_net(int num_layers, int num_inputs,
+                           int input_size, int output_size,
+                           int *layer_weight_specs) {
+
+    int i;
+
+    neural_net *nn;
+
+    nn = (neural_net *) malloc(sizeof(neural_net));
+
+    nn->num_layers = num_layers;
+
+    nn->layer_ptrs =
+        (neural_layer **) malloc(num_layers * sizeof(neural_layer *));
+
+
+    /* Make layers */
+    nn->layer_ptrs[0] = new_neural_layer(input_size,
+                                         layer_weight_specs[0],
+                                         num_inputs);
+
+    for (i = 1; i < num_layers - 1; i++) {
+        nn->layer_ptrs[i] = new_neural_layer(layer_weight_specs[i - 1],
+                                             layer_weight_specs[i],
+                                             num_inputs);
+    }
+
+    nn->layer_ptrs[i] = new_neural_layer(layer_weight_specs[i - 1],
+                                         output_size,
+                                         num_inputs);
+
+
+    /* Connect inputs and outputs of adjacent layers */
+    nn->layer_ptrs[0]->input = new_matrix(input_size, num_inputs);
+
+    for (i = 1; i < num_layers; i++) {
+        nn->layer_ptrs[i]->input = nn->layer_ptrs[i - 1]->output;
+    }
+
+
+    nn->input = nn->layer_ptrs[0]->input;
+    nn->output = nn->layer_ptrs[num_layers - 1]->output;
+
+    return nn;
+
+}
+
+
+void initialize_neural_net_weights(neural_net *nn) {
+
+    int i;
+    neural_layer *layer;
+
+    for (i = 0; i < nn->num_layers; i++) {
+
+        layer = nn->layer_ptrs[i];
+
+        fill_matrix_rand(layer->w, -.5, .5);
+
+        compute_matrix_transpose(layer->w, layer->w_T);
+
+    }
 
 }
