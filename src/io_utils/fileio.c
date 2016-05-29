@@ -88,19 +88,17 @@ sample_set *get_samples_from_file(char *filepath,
     int label;
     int *data;
 
+    data_matrix *sample_inputs_T;
+    data_matrix *sample_labels_T;
+
 
     samples = (sample_set *) malloc(sizeof(sample_set));
 
-    samples->num_samples = num_samples;
+    samples->sample_inputs = new_matrix(sample_length, num_samples);
+    sample_inputs_T = new_matrix(num_samples, sample_length);
 
-    samples->sample_ptrs = (sample **) malloc(num_samples * sizeof(sample *));
-
-    for (i = 0; i < num_samples; i++) {
-
-        samples->sample_ptrs[i] = (sample *) malloc(sizeof(sample));
-        samples->sample_ptrs[i]->input = new_vector(sample_length);
-        samples->sample_ptrs[i]->expected_output = new_vector(NUM_DIGITS);
-    }
+    samples->sample_labels = new_matrix(NUM_DIGITS, num_samples);
+    sample_labels_T = new_matrix(num_samples, NUM_DIGITS);
 
     fstream = fopen(filepath, "r");
 
@@ -116,15 +114,15 @@ sample_set *get_samples_from_file(char *filepath,
 
         for (j = 0; j < NUM_DIGITS; j++) {
             if (j == label) {
-                samples->sample_ptrs[i]->expected_output->data[j] = 1;
+                sample_labels_T->data[i * NUM_DIGITS + j] = 1;
             }
             else {
-                samples->sample_ptrs[i]->expected_output->data[j] = 0;
+                sample_labels_T->data[i * NUM_DIGITS + j] = 0;
             }
         }
 
-        for (j = 0; j < samples->sample_ptrs[i]->input->size; j++) {
-            samples->sample_ptrs[i]->input->data[j] = (float) data[j];
+        for (j = 0; j < sample_length; j++) {
+            sample_inputs_T->data[i * sample_length + j] = (float) data[j];
         }
 
         free(data);
@@ -133,6 +131,12 @@ sample_set *get_samples_from_file(char *filepath,
     }
 
     fclose(fstream);
+
+    compute_matrix_transpose(sample_labels_T, samples->sample_labels);
+    compute_matrix_transpose(sample_inputs_T, samples->sample_inputs);
+
+    free_matrix(sample_labels_T);
+    free_matrix(sample_inputs_T);
 
     return samples;
 
