@@ -34,10 +34,7 @@ float sigmoid_filter(float x) {
 void forward_propagate_layer(neural_layer *layer) {
 
     /* Calculate pre-raw weighted sums */
-    calculate_matrix_times_vector(layer->w, layer->input, layer->r);
-
-    /* Calculate raw weighted sums */
-    multiply_vectors_componentwise(layer->r, layer->t, layer->s);
+    calculate_matrix_times_vector(layer->w, layer->input, layer->s);
 
     /* Calculate output by filtering raw weighted sums */
     apply_filter_to_vector_componentwise(layer->s,
@@ -77,12 +74,8 @@ void forward_propagate_neural_net(neural_net *nn) {
 void calculate_dL_ds_layer(neural_layer *layer,
                            neural_layer *next_layer) {
 
-    multiply_vectors_componentwise(next_layer->dL_ds_local,
-                                   next_layer->t,
-                                   layer->dL_ds_local);
-
     calculate_matrix_times_vector(next_layer->w_T,
-                                layer->dL_ds_local,
+                                next_layer->dL_ds_local,
                                 layer->dL_ds_local);
 
     multiply_vectors_componentwise(next_layer->input,
@@ -124,6 +117,8 @@ void compute_dL_ds_last_layer(neural_net *nn, data_vector *expected_output) {
     compute_additive_inverse_of_vector(expected_output, expected_output);
 
     add_vectors(last_layer->output, expected_output, last_layer->dL_ds_local);
+
+    compute_additive_inverse_of_vector(expected_output, expected_output);
 
     multiply_vector_by_constant(last_layer->dL_ds_local, 2, last_layer->dL_ds_local);
 

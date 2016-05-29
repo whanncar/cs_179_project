@@ -18,11 +18,11 @@ int main(int argc, char **argv) {
     float lambda;
 
     epsilon = .1;
-    lambda = .00000001;
+    lambda = .001;
 
     build_neural_net_from_cmds(argc, argv);
 
-    samples = get_samples_from_file("training_data/mnist_test.csv", 3000, 784);   
+    samples = get_samples_from_file("training_data/mnist_test.csv", 1000, 784);   
 
     old_loss = calculate_loss(nn, samples);
 

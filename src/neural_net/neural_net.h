@@ -13,10 +13,6 @@ typedef struct {
     data_matrix *w;
     data_matrix *w_T;
 
-    data_vector *r;
-
-    data_vector *t;
-
     data_vector *s;
 
     data_vector *output;
