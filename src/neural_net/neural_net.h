@@ -8,16 +8,16 @@
 
 typedef struct {
 
-    data_vector *input;
+    data_matrix *input;
 
     data_matrix *w;
     data_matrix *w_T;
 
-    data_vector *s;
+    data_matrix *s;
 
-    data_vector *output;
+    data_matrix *output;
 
-    data_vector *dL_ds_local;
+    data_matrix *dL_ds;
     data_matrix *dL_dw;
 
 } neural_layer;
@@ -26,8 +26,8 @@ typedef struct {
 
 typedef struct {
 
-    data_vector *input;
-    data_vector *output;
+    data_matrix *input;
+    data_matrix *output;
 
     int num_layers;
 
@@ -36,25 +36,20 @@ typedef struct {
 } neural_net;
 
 
-
 typedef struct {
 
-    data_vector *input;
-    data_vector *expected_output;
-
-} sample;
-
-
-
-typedef struct {
-
-    int num_samples;
-
-    sample **sample_ptrs;
+    data_matrix *sample_inputs;
+    data_matrix *sample_labels;
 
 } sample_set;
 
 /* Functions */
+
+neural_net *new_neural_net(int num_layers, int num_inputs,
+                           int input_size, int output_size,
+                           int *layer_weight_specs);
+
+void initialize_neural_net_weights(neural_net *); 
 
 void train_neural_net(neural_net *, sample_set *, float step);
 

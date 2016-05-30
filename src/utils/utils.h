@@ -6,16 +6,6 @@
 
 typedef struct {
 
-    int size;
-
-    float *data;
-
-} data_vector;
-
-
-
-typedef struct {
-
     int num_rows;
     int num_cols;
 
@@ -27,33 +17,28 @@ typedef struct {
 
 /* Functions */
 
-data_vector *new_vector(int size);
-
 data_matrix *new_matrix(int num_rows, int num_cols);
 
-void calculate_matrix_times_vector(data_matrix *,
-                                   data_vector *,
-                                   data_vector *result);
+void calculate_matrix_times_matrix(data_matrix *m1,
+                                   data_matrix *m2,
+                                   data_matrix *result);
 
-void multiply_vector_by_constant(data_vector *, float, data_vector *result);
+void calc_lin_comb_of_mats(float a, data_matrix *m1,
+                           float b, data_matrix *m2,
+                           data_matrix *result);
 
-void add_vectors(data_vector *, data_vector *, data_vector *result);
+void add_constant_to_matrix(float c, data_matrix *m, data_matrix *result);
 
-void compute_additive_inverse_of_vector(data_vector *, data_vector *result);
+void multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matrix *result);
 
-void add_constant_componentwise_to_vector(data_vector *, float,
-                                          data_vector *result);
+void compute_matrix_transpose(data_matrix *m, data_matrix *result);
 
-void multiply_vectors_componentwise(data_vector *, data_vector *,
-                                    data_vector *result);
-
-void compute_matrix_transpose(data_matrix *, data_matrix *result);
-
-void apply_filter_to_vector_componentwise(data_vector *,
+void apply_filter_to_matrix_componentwise(data_matrix *m,
                                           float (*filter)(float),
-                                          data_vector *result);
+                                          data_matrix *result);
 
+void fill_matrix_rand(data_matrix *m, float min, float max);
 
-void fill_matrix_rand(data_matrix *, float min, float max);
+float calculate_matrix_distance(data_matrix *m1, data_matrix *m2);
 
 #endif /* UTILS_H */
