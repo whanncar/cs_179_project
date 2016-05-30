@@ -7,101 +7,114 @@
 neural_net *nn;
 sample_set *samples;
 
-char usage[] = "usage: <number of samples> <sample length> <label length> "
-              "<number of hidden layers> <layer 1 size> ... <layer n size>\n";
-
-void initialize_neural_net(int, char **);
-void initialize_samples(int, char **);
-void print_output(neural_net *);
+void build_neural_net_from_cmds(int, char **);
 
 
 int main(int argc, char **argv) {
 
-    float loss;
+    float old_loss;
+    float new_loss;
+    float epsilon;
     float lambda;
 
-    lambda = .1;
+    epsilon = .1;
+    lambda = .001;
 
-    if (argc == 1) {
-        printf(usage);
-        return 0;
-    }
+    build_neural_net_from_cmds(argc, argv);
 
+    samples = get_samples_from_file("training_data/mnist_test.csv", 1000, 784);   
 
-    initialize_neural_net(argc, argv);
-    initialize_samples(argc, argv);
+    old_loss = calculate_loss(nn, samples);
 
+printf("%f\n", old_loss);
 
-    while (1) {
+    new_loss = old_loss + 1;
+
+    while (/*(old_loss - new_loss) * (old_loss - new_loss) > epsilon*/ 1) {
+
+        old_loss = new_loss;
 
         train_neural_net(nn, samples, lambda);
-        loss = calculate_loss(nn, samples);
-        print_output(nn); 
-        printf("%f, %f\n", loss, calculate_percent_predicted_correctly(nn, samples));
-    }
 
-    return 0;
+        new_loss = calculate_loss(nn, samples); 
+
+        printf("%f, %f\n", new_loss, calculate_percent_predicted_correctly(nn, samples));
+
+    }
+ 
+
 }
 
 
-void print_output(neural_net *net) {
 
-    data_matrix *output;
+/*
+ * UNRESOLVED
+ *
+ */
 
-    output = net->output;
+void build_neural_net_from_cmds(int argc, char **argv) {
 
     int i, j;
+    int num_layers;
+    int *layer_specs;
 
-    int rows, cols;
+    num_layers = atoi(argv[1]);
 
-    rows = output->num_rows;
-    cols = output->num_cols;
+    layer_specs = (int *) malloc((num_layers + 1) * sizeof(int));
 
-    for (i = 0; i < rows; i++) {
-
-        for (j = 0; j < cols; j++) {
-
-            printf("%f ", output->data[i * cols + j]);
-
-        }
-
-        printf("\n");
-
+    for (i = 0; i < num_layers + 1; i++) {
+        layer_specs[i] = atoi(argv[i + 2]);
     }
 
-}
+    nn = (neural_net *) malloc(sizeof(neural_net));
 
+    nn->num_layers = num_layers;
 
-void initialize_neural_net(int argc, char **argv) {
-
-    int num_layers;
-    int num_inputs;
-    int input_size;
-    int output_size;
-    int *layer_weight_specs;
-    int i;   
-
-    num_inputs = atoi(argv[1]);
-    input_size = atoi(argv[2]);
-    output_size = atoi(argv[3]);
-    num_layers = atoi(argv[4]);
-
-    layer_weight_specs = (int *) malloc(num_layers * sizeof(int));
+    nn->layer_ptrs = (neural_layer **) malloc(num_layers * sizeof(neural_layer *));
 
     for (i = 0; i < num_layers; i++) {
-        layer_weight_specs[i] = atoi(argv[5 + i]);
+
+        nn->layer_ptrs[i] = (neural_layer *) malloc(sizeof(neural_layer));
+
     }
 
-    num_layers += 1;
+    nn->layer_ptrs[0]->input = new_vector(layer_specs[0]);
 
-    nn = new_neural_net(num_layers, num_inputs, input_size, output_size, layer_weight_specs);
+    for (i = 0; i < num_layers - 1; i++) {
 
-    free(layer_weight_specs);
-}
+        nn->layer_ptrs[i]->output = new_vector(layer_specs[i + 1]);
 
+        nn->layer_ptrs[i + 1]->input = nn->layer_ptrs[i]->output;
 
-void initialize_samples(int argc, char **argv) {
+    }
 
-    samples = get_samples_from_file("training_data/mnist_test.csv",
-                                    atoi(argv[1]), atoi(argv[2]));
+    nn->layer_ptrs[num_layers - 1]->output = new_vector(layer_specs[num_layers]);
+
+    nn->input = nn->layer_ptrs[0]->input;
+    nn->output = nn->layer_ptrs[num_layers - 1]->output;
+
+    for (i = 0; i < num_layers; i++) {
+
+        nn->layer_ptrs[i]->s = new_vector(nn->layer_ptrs[i]->output->size);
+        nn->layer_ptrs[i]->dL_ds_local = new_vector(nn->layer_ptrs[i]->output->size);
+
+    }
+
+    for (i = 0; i < num_layers; i++) {
+
+        nn->layer_ptrs[i]->w = new_matrix(nn->layer_ptrs[i]->output->size,
+                                          nn->layer_ptrs[i]->input->size);
+
+        fill_matrix_rand(nn->layer_ptrs[i]->w, -.5, .5);
+
+        nn->layer_ptrs[i]->w_T = new_matrix(nn->layer_ptrs[i]->w->num_cols,
+                                            nn->layer_ptrs[i]->w->num_rows);
+
+        compute_matrix_transpose(nn->layer_ptrs[i]->w, nn->layer_ptrs[i]->w_T);
+
+        nn->layer_ptrs[i]->dL_dw = new_matrix(nn->layer_ptrs[i]->w->num_rows,
+                                              nn->layer_ptrs[i]->w->num_cols);
+
+    }
+
 }

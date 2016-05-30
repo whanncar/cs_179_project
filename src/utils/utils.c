@@ -3,6 +3,36 @@
 #include "utils.h"
 
 
+/*
+ * new_vector: Creates a new data vector with
+ *             space for an array of the given
+ *             size
+ *
+ * arguments: size: Size of the array to be stored
+ * 
+ * return value: Pointer to the newly allocated data vector
+ *
+ */
+
+data_vector *new_vector(int size) {
+
+    assert(size >= 0);
+
+    data_vector *new_vector;
+
+    /* Allocate space for the new vector */
+    new_vector = (data_vector *) malloc(sizeof(data_vector));
+
+    /* Set new vector's size */
+    new_vector->size = size;
+
+    /* Allocate space for new vector's data */
+    new_vector->data = (float *) malloc(size * sizeof(float));
+
+    return new_vector;
+}
+
+
 
 /* 
  * new_matrix: Creates a new data matrix with the given
@@ -33,124 +63,125 @@ data_matrix *new_matrix(int num_rows, int num_cols) {
 }
 
 
-void free_matrix(data_matrix *m) {
 
-    free(m->data);
-    free(m);
+/*
+ * calculate_matrix_times_vector: Multiplies the matrix m by the vector
+ *                                v and stores the product in the vector
+ *                                result
+ *
+ * arguments: m: Matrix for multiplication
+ *            v: Vector for multiplication
+ *            result: Vector for storing result
+ *
+ */
 
-}
-
-
-void calculate_matrix_times_matrix(data_matrix *m1,
-                                   data_matrix *m2,
-                                   data_matrix *result) {
-
-    int i, j, k;
-
-    int m1_rows, m1_cols, m2_cols;
-
-    assert(m1->num_cols == m2->num_rows);
-    assert(m1->num_rows == result->num_rows);
-    assert(m2->num_cols == result->num_cols);
-
-
-    m1_rows = m1->num_rows;
-    m1_cols = m1->num_cols;
-    m2_cols = m2->num_cols;
-
-    for (i = 0; i < m1_rows; i++) {
-
-        for (j = 0; j < m2_cols; j++) {
-
-            result->data[i * m2_cols + j] = 0;
-
-            for (k = 0; k < m1_cols; k++) {
-
-                result->data[i * m2_cols + j] +=
-                    m1->data[i * m1_cols + k] * m2->data[k * m2_cols + j];
-
-            }
-
-        }
-
-    }
-
-}
-
-
-void calc_lin_comb_of_mats(float a, data_matrix *m1,
-                           float b, data_matrix *m2,
-                           data_matrix *result) {
+void calculate_matrix_times_vector(data_matrix *m,
+                                   data_vector *v,
+                                   data_vector *result) {
 
     int i, j;
 
-    int rows, cols;
+    /* Put an assertion UNRESOLVED */
 
-    assert(m1->num_rows == m2->num_rows);
-    assert(m1->num_cols == m2->num_cols);
+    for (i = 0; i < m->num_rows; i++) {
 
-    rows = m1->num_rows;
-    cols = m1->num_cols;
+        result->data[i] = 0;
 
-    for (i = 0; i < rows; i++) {
-
-        for (j = 0; j < cols; j++) {
-
-            result->data[i * cols + j] = a * m1->data[i * cols + j] + 
-                                         b * m2->data[i * cols + j];
-
+        for (j = 0; j < m->num_cols; j++) {
+            result->data[i] += m->data[i * m->num_cols + j] * v->data[j];
         }
-
     }
 
 }
 
 
-void add_constant_to_matrix(float c, data_matrix *m, data_matrix *result) {
 
-    int i, j;
+/*
+ * UNRESOLVED
+ *
+ */
 
-    int rows, cols;
+void multiply_vector_by_constant(data_vector *v, float c,
+                                 data_vector *result) {
 
-    rows = m->num_rows;
-    cols = m->num_cols;
+    int i;
 
-    for (i = 0; i < rows; i++) {
-
-        for (j = 0; j < cols; j++) {
-
-            result->data[i * cols + j] = c + m->data[i * cols + j];
-
-        }
-
+    for (i = 0; i < v->size; i++) {
+        result->data[i] = v->data[i] * c;
     }
 
 }
 
 
-void multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matrix *result) {
 
-    int i, j;
+/*
+ * UNRESOLVED
+ *
+ */
 
-    int rows, cols;
+void add_vectors(data_vector *v1, data_vector *v2, data_vector *result) {
 
-    assert(m1->num_rows == m2->num_rows);
-    assert(m1->num_cols == m2->num_cols);
+    int i;
 
-    rows = m1->num_rows;
-    cols = m1->num_cols;
-
-    for (i = 0; i < rows; i++) {
-
-        for (j = 0; j < cols; j++) {
-
-            result->data[i * cols + j] = (m1->data[i * cols + j]) * (m2->data[i * cols + j]);
-
-        }
-
+    for (i = 0; i < v1->size; i++) {
+        result->data[i] = v1->data[i] + v2->data[i];
     }
 
 }
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void compute_additive_inverse_of_vector(data_vector *v, data_vector *result) {
+
+    int i;
+
+    for (i = 0; i < v->size; i++) {
+        result->data[i] = -(v->data[i]);
+    }
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void add_constant_componentwise_to_vector(data_vector *v, float c,
+                                          data_vector *result) {
+
+    int i;
+
+    for (i = 0; i < v->size; i++) {
+        result->data[i] = v->data[i] + c;
+    }
+
+}
+
+
+
+/*
+ * UNRESOLVED
+ *
+ */
+
+void multiply_vectors_componentwise(data_vector *v1, data_vector *v2,
+                                    data_vector *result) {
+
+    int i;
+
+    for (i = 0; i < v1->size; i++) {
+        result->data[i] = v1->data[i] * v2->data[i];
+    }
+
+}
+
 
 
 /*
@@ -161,9 +192,6 @@ void multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matr
 void compute_matrix_transpose(data_matrix *m, data_matrix *result) {
 
     int i, j;
-
-    assert(m->num_rows == result->num_cols);
-    assert(m->num_cols == result->num_rows);
 
     for (i = 0; i < m->num_rows; i++) {
 
@@ -184,25 +212,14 @@ void compute_matrix_transpose(data_matrix *m, data_matrix *result) {
  *
  */
 
-void apply_filter_to_matrix_componentwise(data_matrix *m,
+void apply_filter_to_vector_componentwise(data_vector *v,
                                           float (*filter)(float),
-                                          data_matrix *result) {
+                                          data_vector *result) {
 
-    int i, j;
+    int i;
 
-    int rows, cols;
-
-    rows = m->num_rows;
-    cols = m->num_cols;
-
-    for (i = 0; i < rows; i++) {
-
-        for (j = 0; j < cols; j++) {
-
-            result->data[i * cols + j] = filter(m->data[i * cols + j]);
-
-        }
-
+    for (i = 0; i < v->size; i++) {
+        result->data[i] = filter(v->data[i]);
     }
 
 }
@@ -234,37 +251,5 @@ void fill_matrix_rand(data_matrix *m, float min, float max) {
         }
 
     }
-
-}
-
-
-
-float calculate_matrix_distance(data_matrix *m1, data_matrix *m2) {
-
-    int i, j;
-    int rows, cols;
-    float result, diff;
-
-    assert(m1->num_rows == m2->num_rows);
-    assert(m1->num_cols == m2->num_cols);
-
-    rows = m1->num_rows;
-    cols = m1->num_cols;
-
-    result = 0;
-
-    for (i = 0; i < rows; i++) {
-
-        for (j = 0; j < cols; j++) {
-
-            diff = m1->data[i * cols + j] - m2->data[i * cols + j];
-
-            result += diff * diff;
-
-        }
-
-    }
-
-    return result;
 
 }
