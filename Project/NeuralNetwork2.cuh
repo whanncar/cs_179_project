@@ -90,5 +90,7 @@ void free_data_matrix(data_matrix * X, int numLayers);
 
 void checkMem(void * pointer);
 
+void calcDl_dw(data_matrix * dl_dw, data_matrix * dl, data_matrix * X, int currentLayer);
+
 
 #endif // CPU_NEURAL_NET_CUH

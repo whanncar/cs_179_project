@@ -54,6 +54,7 @@ data_matrix *X = (data_matrix *) malloc((NUM_LAYERS + 1) *sizeof(data_matrix)); 
 data_matrix *layerSum = (data_matrix *) malloc(NUM_LAYERS *sizeof(data_matrix)); 
 data_matrix *dl = (data_matrix *) malloc(NUM_LAYERS *sizeof(data_matrix)); ; 
 data_matrix *trainLabels  = (data_matrix *) malloc(1 *sizeof(data_matrix)); ; 
+data_matrix *dl_dw = (data_matrix *) malloc(NUM_LAYERS *sizeof(data_matrix));
 
 printf("Initialize data and label Matrices\n");
 
@@ -62,6 +63,8 @@ float * labels = (float *) malloc(numRows* sizeof(float));
 float * labelEst = (float *) malloc(numRows* sizeof(float));
 float * loss = (float *) malloc(numIterations* sizeof(float));
 
+
+initialize_dl_dw(dl_dw, neuronsPerLayer, numTestSamples);
 
 
 printf("\nInitialize Weight matrices\n");
@@ -201,6 +204,21 @@ for(i = 0; i < 10; i++)
 	}
 	printf("\n");
 }
+
+printf("First 10 samples of output X(l-1)\n");
+for(i = 0; i < X[NUM_LAYERS-1].r; i++)
+{
+	for(j = 0; j < 10; j++)
+	{
+		printf("%f  ",X[NUM_LAYERS-1].w[j + i*X[NUM_LAYERS-1].c]);
+	}
+	printf("\n");
+}
+
+printf("before dl_dw\n");
+//Layer NUM_layers - 1 is the last layer for dl and the second to last for X
+calcDl_dw(dl_dw, dl, X, NUM_LAYERS-1);
+
 /*
 //dl_dw[l].w = dl* (ones X[l-1]);
 void calcWeightChange(data_matrix *dl_dw, )

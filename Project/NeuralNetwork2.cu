@@ -77,10 +77,11 @@ void multiplyArrays(float * C, float * A, float * B, int r1, int c1, int r2, int
 	int inner = 0;
 	float sum = 0;
 
-	/*if(c1 != r2)
+	if(c1 != r2)
 	{
 		printf("Error: Row - column mismatch\n");
-	}*/
+	}
+	printf("here\n");
 
 	//int A[ROW][INNER], int B[INNER][COL], int C[ROW][COL];
 	for (row = 0; row < ROW; ++row) 
@@ -109,7 +110,7 @@ void multiplyArrays(float * C, float * A, float * B, int r1, int c1, int r2, int
 			}*/
 			
 		}
-		//printf("R %d C %d I %d S %f \n",row,col,inner,sum);
+		printf("R %d C %d I %d S %f \n",row,col,inner,sum);
 	}
  }
 
@@ -251,6 +252,30 @@ void transpose(float * C, float * A, int r, int c)
 	}
 }
 
+void calcDl_dw(data_matrix * dl_dw, data_matrix * dl, data_matrix * X, int currentLayer)
+{
+	float * dl_temp = (float *)malloc(dl[currentLayer].r * dl[currentLayer].c * sizeof(float));
+
+	//Because X is of length NUM_layers +1, current layer is actually the l-1th layer
+	float * Xlm1_temp = (float *)malloc(X[currentLayer].r * X[currentLayer].c * sizeof(float));
+
+	printf("allocate temp arrays\n");
+	transpose(dl_temp, dl[currentLayer].w, dl[currentLayer].r, dl[currentLayer].c);
+	transpose(Xlm1_temp, X[currentLayer].w, X[currentLayer].r, X[currentLayer].c);
+	printf("after Transpose\n");
+
+	//dl_temp has size r = dl[l].c,  c = dl[l].r
+	//xl_temp has size r = Xl[l].c  c = xl[l].r
+	printf("r %d c %d r %d c %d\n",dl[currentLayer].c, dl[currentLayer].r, 
+		X[currentLayer].c, X[currentLayer].r);
+	multiplyArrays(dl_dw[currentLayer].w, dl_temp, Xlm1_temp, 
+		dl[currentLayer].c, dl[currentLayer].r, 
+		X[currentLayer].c, X[currentLayer].r);
+	printf("afterMult\n");
+	free(dl_temp);
+	free(Xlm1_temp);
+}
+
 void scalarMultiply(float * C, float * A, float num, int r, int c)
 {
 	for(int i = 0; i < r; i++)
@@ -328,6 +353,24 @@ void initialize_dl(data_matrix * dl, int * neuronsPerLayer, int numTestSamples)
 		dl[i].w = (float *)malloc(dl[i].r * dl[i].c* sizeof(float));
 	}
 }
+
+void initialize_dl_dw(data_matrix * dl_dw, int * neuronsPerLayer, int numTestSamples)
+{
+	for(int i = 0; i < NUM_LAYERS; i++)
+	{
+		dl_dw[i].r = neuronsPerLayer[i]; 		//n_neurons
+
+		if(i > 0)
+		{
+			dl_dw[i].c = neuronsPerLayer[i-1] + 1; 	// n_neurons from previous layer + 1
+		}
+		else { //i = 0
+			dl_dw[i].c = neuronsPerLayer[i] + 1; 	// n_neurons from previous layer + 1
+		}
+		dl_dw[i].w = (float *)malloc(dl_dw[i].r * dl_dw[i].c* sizeof(float));
+	}
+}
+
 
 void checkMem(void * pointer)
 {
