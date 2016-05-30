@@ -13,14 +13,14 @@ char usage[] = "usage: <number of samples> <sample length> <label length> "
 void initialize_neural_net(int, char **);
 void initialize_samples(int, char **);
 void print_output(neural_net *);
-
+void print_weights(neural_net *);
 
 int main(int argc, char **argv) {
 
     float loss;
     float lambda;
 
-    lambda = .1;
+    lambda = .001;
 
     if (argc == 1) {
         printf(usage);
@@ -36,12 +36,45 @@ int main(int argc, char **argv) {
 
         train_neural_net(nn, samples, lambda);
         loss = calculate_loss(nn, samples);
-        print_output(nn); 
+
+        print_output(nn);
+/* 
+        print_weights(nn);
+*/
         printf("%f, %f\n", loss, calculate_percent_predicted_correctly(nn, samples));
     }
 
     return 0;
 }
+
+void print_weights(neural_net *net) {
+
+    int i, j, k;
+    neural_layer *layer;
+
+
+    for (k = 0; k < net->num_layers; k++) {
+
+        layer = net->layer_ptrs[k];
+
+        for (i = 0; i < layer->w->num_rows; i++) {
+
+            for (j = 0; j < layer->w->num_cols; j++) {
+
+                printf("%f ", layer->w->data[i * layer->w->num_cols + j]);
+
+            }
+
+            printf("\n");
+
+        }
+
+        printf("\n");
+
+    }
+
+}
+
 
 
 void print_output(neural_net *net) {
@@ -56,6 +89,8 @@ void print_output(neural_net *net) {
 
     rows = output->num_rows;
     cols = output->num_cols;
+
+    cols = 10;
 
     for (i = 0; i < rows; i++) {
 
@@ -95,6 +130,8 @@ void initialize_neural_net(int argc, char **argv) {
     num_layers += 1;
 
     nn = new_neural_net(num_layers, num_inputs, input_size, output_size, layer_weight_specs);
+
+    initialize_neural_net_weights(nn);
 
     free(layer_weight_specs);
 }
