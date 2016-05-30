@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "neural_net.h"
 #include <math.h>
 
@@ -33,14 +34,10 @@ float sigmoid_filter(float x) {
 
 void forward_propagate_layer(neural_layer *layer) {
 
-    /* Calculate pre-raw weighted sums */
-    calculate_matrix_times_vector(layer->w, layer->input, layer->r);
-
-    /* Calculate raw weighted sums */
-    multiply_vectors_componentwise(layer->r, layer->t, layer->s);
+    gpu_calculate_matrix_times_matrix(layer->w, layer->input, layer->s);
 
     /* Calculate output by filtering raw weighted sums */
-    apply_filter_to_vector_componentwise(layer->s,
+    apply_filter_to_matrix_componentwise(layer->s,
                                          &sigmoid_filter,
                                          layer->output);
 
@@ -77,34 +74,26 @@ void forward_propagate_neural_net(neural_net *nn) {
 void calculate_dL_ds_layer(neural_layer *layer,
                            neural_layer *next_layer) {
 
-    multiply_vectors_componentwise(next_layer->dL_ds_local,
-                                   next_layer->t,
-                                   layer->dL_ds_local);
+    data_matrix *temp;
 
-    calculate_matrix_times_vector(next_layer->w_T,
-                                layer->dL_ds_local,
-                                layer->dL_ds_local);
+    gpu_calculate_matrix_times_matrix(next_layer->w_T,
+                                next_layer->dL_ds,
+                                layer->dL_ds);
 
-    multiply_vectors_componentwise(next_layer->input,
-                                   layer->dL_ds_local,
-                                   layer->dL_ds_local);
+    multiply_matrices_componentwise(next_layer->input,
+                                   layer->dL_ds,
+                                   layer->dL_ds);
 
-    compute_additive_inverse_of_vector(next_layer->input,
-                                       next_layer->input);
 
-    add_constant_componentwise_to_vector(next_layer->input, 1,
-                                         next_layer->input);
+    temp = new_matrix(next_layer->input->num_rows, next_layer->input->num_cols);
 
-    multiply_vectors_componentwise(next_layer->input,
-                                   layer->dL_ds_local,
-                                   layer->dL_ds_local);
+    calc_lin_comb_of_mats(0.0, next_layer->input, -1.0, next_layer->input, temp);
 
-    add_constant_componentwise_to_vector(next_layer->input, -1,
-                                         next_layer->input);
+    add_constant_to_matrix(1.0, temp, temp);
 
-    compute_additive_inverse_of_vector(next_layer->input,
-                                       next_layer->input);
+    multiply_matrices_componentwise(temp, layer->dL_ds, layer->dL_ds);
 
+    free_matrix(temp);
 }
 
 
@@ -114,38 +103,30 @@ void calculate_dL_ds_layer(neural_layer *layer,
  *
  */
 
-void compute_dL_ds_last_layer(neural_net *nn, data_vector *expected_output) {
+void compute_dL_ds_last_layer(neural_net *nn, data_matrix *expected_output) {
  
     neural_layer *last_layer;
+
+    data_matrix *temp;
 
     last_layer = nn->layer_ptrs[nn->num_layers - 1];
 
 
-    compute_additive_inverse_of_vector(expected_output, expected_output);
+    calc_lin_comb_of_mats(1.0, last_layer->output, -1.0, expected_output, last_layer->dL_ds);
 
-    add_vectors(last_layer->output, expected_output, last_layer->dL_ds_local);
+    calc_lin_comb_of_mats(0.0, last_layer->dL_ds, 2.0, last_layer->dL_ds, last_layer->dL_ds);
 
-    multiply_vector_by_constant(last_layer->dL_ds_local, 2, last_layer->dL_ds_local);
+    multiply_matrices_componentwise(last_layer->dL_ds, last_layer->output, last_layer->dL_ds);
 
-    multiply_vectors_componentwise(last_layer->dL_ds_local,
-                                   last_layer->output,
-                                   last_layer->dL_ds_local);
+    temp = new_matrix(last_layer->output->num_rows, last_layer->output->num_cols);
 
-    compute_additive_inverse_of_vector(last_layer->output,
-                                       last_layer->output);
+    calc_lin_comb_of_mats(0.0, last_layer->output, -1.0, last_layer->output, temp);
 
-    add_constant_componentwise_to_vector(last_layer->output, 1,
-                                         last_layer->output);
+    add_constant_to_matrix(1.0, temp, temp);
 
-    multiply_vectors_componentwise(last_layer->output,
-                                   last_layer->dL_ds_local,
-                                   last_layer->dL_ds_local);
+    multiply_matrices_componentwise(last_layer->dL_ds, temp, last_layer->dL_ds);
 
-    add_constant_componentwise_to_vector(last_layer->output, -1,
-                                         last_layer->output);
-
-    compute_additive_inverse_of_vector(last_layer->output,
-                                       last_layer->output);
+    free_matrix(temp);
 }
 
 /*
@@ -154,7 +135,7 @@ void compute_dL_ds_last_layer(neural_net *nn, data_vector *expected_output) {
  */
 
 void compute_dL_ds_all_layers(neural_net *nn,
-                              data_vector *expected_output) {
+                              data_matrix *expected_output) {
 
     int i;
 
@@ -166,24 +147,30 @@ void compute_dL_ds_all_layers(neural_net *nn,
 }
 
 
+/*here*/
 
-/*
- * UNRESOLVED
- *
- */
+void update_dL_dw_layer(neural_layer *layer) {
 
-void add_dL_ds_local_to_dL_ds_global_all_layers(neural_net *nn) {
+    data_matrix *temp;
+
+    temp = new_matrix(layer->input->num_cols, layer->input->num_rows);
+
+    compute_matrix_transpose(layer->input, temp);
+
+    gpu_calculate_matrix_times_matrix(layer->dL_ds, temp, layer->dL_dw);
+
+    free_matrix(temp);
+
+}
+
+
+void update_dL_dw_all_layers(neural_net *nn) {
 
     int i;
-    neural_layer *current_layer;
 
     for (i = 0; i < nn->num_layers; i++) {
 
-        current_layer = nn->layer_ptrs[i];
-
-        add_vectors(current_layer->dL_ds_local,
-                    current_layer->dL_ds_global,
-                    current_layer->dL_ds_global);
+        update_dL_dw_layer(nn->layer_ptrs[i]);
 
     }
 
@@ -191,74 +178,35 @@ void add_dL_ds_local_to_dL_ds_global_all_layers(neural_net *nn) {
 
 
 
-/*
- * UNRESOLVED
- *
- */
+void update_w_layer(neural_layer *layer, float step) {
 
-void update_t_layer(neural_layer *layer, float step) {
+    calc_lin_comb_of_mats(1, layer->w, -step, layer->dL_dw, layer->w);
 
-    multiply_vectors_componentwise(layer->dL_ds_global,
-                                   layer->r, layer->dL_ds_global);
-
-    multiply_vector_by_constant(layer->dL_ds_global,
-                                step,
-                                layer->dL_ds_global);
-
-    compute_additive_inverse_of_vector(layer->dL_ds_global,
-                                       layer->dL_ds_global);
-
-    add_vectors(layer->t, layer->dL_ds_global, layer->t);
+    compute_matrix_transpose(layer->w, layer->w_T);
 
 }
 
 
-
-/*
- * UNRESOLVED
- *
- */
-
-void update_t_all_layers(neural_net *nn, float step) {
+void update_w_all_layers(neural_net *nn, float step) {
 
     int i;
 
     for (i = 0; i < nn->num_layers; i++) {
-        update_t_layer(nn->layer_ptrs[i], step);
+
+        update_w_layer(nn->layer_ptrs[i], step);
+
     }
 
 }
 
 
-
-/*
- * UNRESOLVED
- *
- */
-
-void backward_propagate_neural_net_single_sample(neural_net *nn,
-                                                 data_vector *expected_output) {
+void backward_propagate_neural_net(neural_net *nn, data_matrix *expected_output, float step) {
 
     compute_dL_ds_all_layers(nn, expected_output);
 
-    add_dL_ds_local_to_dL_ds_global_all_layers(nn);
+    update_dL_dw_all_layers(nn);
 
-}
-
-
-
-/*
- * UNRESOLVED
- *
- */
-
-void set_neural_net_input(neural_net *nn, data_vector *input) {
-
-    int i;
-
-    for (i = 0; i < nn->input->size; i++) {
-        nn->input->data[i] = input->data[i];
-    }
+    update_w_all_layers(nn, step);
 
 }
 
@@ -268,91 +216,40 @@ void set_neural_net_input(neural_net *nn, data_vector *input) {
  *
  */
 
-void train_neural_net(neural_net *nn, sample_set *set, float step) {
+void set_neural_net_input(neural_net *nn, data_matrix *input) {
 
-    int i;
-    sample *current_sample;
+    int i, j;
 
-    for (i = 0; i < set->num_samples; i++) {
+    int rows, cols;
 
-        current_sample = set->sample_ptrs[i];
+    rows = nn->input->num_rows;
+    cols = nn->input->num_cols;
 
-        set_neural_net_input(nn, current_sample->input);
+    for (i = 0; i < rows; i++) {
 
-        forward_propagate_neural_net(nn);
+        for (j = 0; j < cols; j++) {
 
-        backward_propagate_neural_net_single_sample(nn,
-            current_sample->expected_output);
-    }
-
-    update_t_all_layers(nn, step);
-
-}
-
-
-
-/*
- * UNRESOLVED
- *
- */
-
-float calculate_sample_loss(neural_net *nn, sample *s) {
-
-    int i;
-    float result;
-    float diff;
-
-    result = 0;
-
-    set_neural_net_input(nn, s->input);
-
-    forward_propagate_neural_net(nn);
-
-    for (i = 0; i < nn->output->size; i++) {
-
-        diff = nn->output->data[i] - s->expected_output->data[i];
-
-        result += diff * diff;
-
-    }
-
-    return result;
-
-}
-
-
-
-/*
- * UNRESOLVED
- *
- */
-
-int predict(neural_net *nn, sample *s) {
-
-    int i, max_index;
-    float max;
-
-    set_neural_net_input(nn, s->input);
-
-    forward_propagate_neural_net(nn);
-
-    max = nn->output->data[0];
-    max_index = 0;
-
-    for (i = 1; i < nn->output->size; i++) {
-
-        if (nn->output->data[i] > max) {
-
-            max = nn->output->data[i];
-            max_index = i;
+            nn->input->data[i * cols + j] = input->data[i * cols + j];
 
         }
 
     }
 
-    return max_index;
+}
+
+
+
+
+void train_neural_net(neural_net *nn, sample_set *set, float step) {
+
+    set_neural_net_input(nn, set->sample_inputs);
+
+    forward_propagate_neural_net(nn);
+
+    backward_propagate_neural_net(nn, set->sample_labels, step);
 
 }
+
 
 
 
@@ -363,46 +260,171 @@ int predict(neural_net *nn, sample *s) {
 
 float calculate_loss(neural_net *nn, sample_set *set) {
 
-    int i;
-    float result;
+    set_neural_net_input(nn, set->sample_inputs);
 
-    result = 0;
+    forward_propagate_neural_net(nn);
 
-    for (i = 0; i < set->num_samples; i++) {
-
-        result += calculate_sample_loss(nn, set->sample_ptrs[i]);
-
-    }
-
-    return result;
+    return calculate_matrix_distance(nn->output, set->sample_labels);
 
 }
 
 
+void predict(neural_net *nn, sample_set *set, data_matrix *predictions) {
 
-/*
- * UNRESOLVED
- *
- */
+    set_neural_net_input(nn, set->sample_inputs);
 
-float calculate_percent_predicted_correctly(neural_net *nn, sample_set *set) {
+    forward_propagate_neural_net(nn);
 
-    int i;
-    int prediction;
-    float count;
+    int i, j;
 
-    count = 0;
+    int rows, cols;
 
-    for (i = 0; i < set->num_samples; i++) {
+    data_matrix *output = nn->output;
 
-        prediction = predict(nn, set->sample_ptrs[i]);
+    rows = output->num_rows;
+    cols = output->num_cols;
 
-        if (set->sample_ptrs[i]->expected_output->data[prediction]) {
-            count++;
+    for (j = 0; j < cols; j++) {
+
+        predictions->data[j] = 0;
+        predictions->data[j + cols] = 0;
+
+    }
+
+    for (i = 0; i < rows; i++) {
+
+        for (j = 0; j < cols; j++) {
+
+            if (output->data[i * cols + j] > predictions->data[j]) {
+
+                predictions->data[j] = output->data[i * cols + j];
+                predictions->data[cols + j] = i;
+
+            }
+
         }
 
     }
 
-    return 100 * count / ((float) set->num_samples);
+}
+
+
+float calculate_percent_predicted_correctly(neural_net *nn, sample_set *set) {
+
+    int i;
+    float count;
+
+    data_matrix *predictions;
+
+    predictions = new_matrix(2, set->sample_inputs->num_cols);
+
+    predict(nn, set, predictions);
+
+    count = 0;
+
+    for (i = 0; i < set->sample_inputs->num_cols; i++) {
+
+        if (set->sample_labels->data[((int) (predictions->data[predictions->num_cols + i])) * set->sample_inputs->num_cols + i]) {
+
+            count++;
+
+        }
+
+    }
+
+    free_matrix(predictions);
+
+    return 100 * count / ((float) set->sample_inputs->num_cols);
+
+}
+
+
+neural_layer *new_neural_layer(int input_length,
+                               int num_weights,
+                               int num_inputs) {
+
+    neural_layer *layer;
+
+    layer = (neural_layer *) malloc(sizeof(neural_layer));
+
+    layer->w = new_matrix(num_weights, input_length);
+
+    layer->w_T = new_matrix(input_length, num_weights);
+
+    layer->s = new_matrix(num_weights, num_inputs);
+
+    layer->output = new_matrix(num_weights, num_inputs);
+
+    layer->dL_ds = new_matrix(num_weights, num_inputs);
+
+    layer->dL_dw = new_matrix(num_weights, input_length);
+
+    return layer;
+
+}
+
+
+neural_net *new_neural_net(int num_layers, int num_inputs,
+                           int input_size, int output_size,
+                           int *layer_weight_specs) {
+
+    int i;
+
+    neural_net *nn;
+
+    nn = (neural_net *) malloc(sizeof(neural_net));
+
+    nn->num_layers = num_layers;
+
+    nn->layer_ptrs =
+        (neural_layer **) malloc(num_layers * sizeof(neural_layer *));
+
+
+    /* Make layers */
+    nn->layer_ptrs[0] = new_neural_layer(input_size,
+                                         layer_weight_specs[0],
+                                         num_inputs);
+
+    for (i = 1; i < num_layers - 1; i++) {
+        nn->layer_ptrs[i] = new_neural_layer(layer_weight_specs[i - 1],
+                                             layer_weight_specs[i],
+                                             num_inputs);
+    }
+
+    nn->layer_ptrs[i] = new_neural_layer(layer_weight_specs[i - 1],
+                                         output_size,
+                                         num_inputs);
+
+
+    /* Connect inputs and outputs of adjacent layers */
+    nn->layer_ptrs[0]->input = new_matrix(input_size, num_inputs);
+
+    for (i = 1; i < num_layers; i++) {
+        nn->layer_ptrs[i]->input = nn->layer_ptrs[i - 1]->output;
+    }
+
+
+    nn->input = nn->layer_ptrs[0]->input;
+    nn->output = nn->layer_ptrs[num_layers - 1]->output;
+
+    return nn;
+
+}
+
+
+void initialize_neural_net_weights(neural_net *nn) {
+
+    int i;
+    neural_layer *layer;
+
+    for (i = 0; i < nn->num_layers; i++) {
+
+        layer = nn->layer_ptrs[i];
+
+        fill_matrix_rand(layer->w, -.5, .5);
+
+        compute_matrix_transpose(layer->w, layer->w_T);
+
+    }
 
 }
