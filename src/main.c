@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     float loss;
     float lambda;
 
-    lambda = .0001;
+    lambda = .0005;
 
     if (argc == 1) {
         printf(usage);

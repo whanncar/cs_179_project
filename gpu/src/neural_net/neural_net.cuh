@@ -32,10 +32,8 @@ typedef struct {
 
 /* Functions */
 
-neural_net *new_neural_net(int num_layers, int num_inputs,
-                           int input_size, int output_size,
-                           int *layer_weight_specs);
-
-void initialize_neural_net_weights(neural_net *); 
+neural_net *gpu_new_neural_net(int num_layers, int num_inputs,
+                               int input_size, int output_size,
+                               int *layer_weight_specs);
 
 #endif /* NEURAL_NET_H */

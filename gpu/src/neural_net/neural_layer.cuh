@@ -26,8 +26,8 @@ typedef struct {
 
 /* Functions */
 
-neural_layer *new_neural_layer(int input_length,
-                               int num_weights,
-                               int num_inputs);
+neural_layer *gpu_new_neural_layer(int input_length,
+                                   int num_weights,
+                                   int num_inputs);
 
 #endif /* NEURAL_LAYER_H */

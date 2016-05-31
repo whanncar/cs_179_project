@@ -7,7 +7,9 @@
 
 
 neural_net *nn;
+neural_net *nn_dev;
 sample_set *samples;
+sample_set *samples_dev;
 
 char usage[] = "usage: <number of samples> <sample length> <label length> "
               "<number of hidden layers> <layer 1 size> ... <layer n size>\n";
