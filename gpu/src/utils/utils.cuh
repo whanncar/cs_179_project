@@ -1,24 +1,10 @@
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef UTILS_CUH
+#define UTILS_CUH
 
 #include <stdlib.h>
 #include <assert.h>
-
-
-/* Structs */
-
-typedef struct {
-
-    int num_rows;
-    int num_cols;
-
-    float *data;
-
-    int stride;
-
-} data_matrix;
-
+#include "../../../src/utils/utils.h"
 
 
 /* Functions */
@@ -47,4 +33,4 @@ float gpu_calculate_matrix_distance(data_matrix *m1, data_matrix *m2);
 
 void gpu_free_matrix(data_matrix *);
 
-#endif /* UTILS_H */
+#endif /* UTILS_CUH */

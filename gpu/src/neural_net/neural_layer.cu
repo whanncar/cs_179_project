@@ -24,3 +24,18 @@ neural_layer *gpu_new_neural_layer(int input_length,
     return layer;
 
 }
+
+
+
+void gpu_free_neural_layer(neural_layer *layer) {
+
+    cudaFree(layer->w);
+    cudaFree(layer->w_T);
+    cudaFree(layer->s);
+    cudaFree(layer->output);
+    cudaFree(layer->dL_ds);
+    cudaFree(layer->dL_dw);
+
+    free(layer);
+
+}

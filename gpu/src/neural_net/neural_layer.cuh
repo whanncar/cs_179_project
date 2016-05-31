@@ -1,6 +1,6 @@
 
-#ifndef NEURAL_LAYER_H
-#define NEURAL_LAYER_H
+#ifndef NEURAL_LAYER_CUH
+#define NEURAL_LAYER_CUH
 
 #include "../utils/utils.h"
 
@@ -30,4 +30,6 @@ neural_layer *gpu_new_neural_layer(int input_length,
                                    int num_weights,
                                    int num_inputs);
 
-#endif /* NEURAL_LAYER_H */
+void gpu_free_neural_layer(neural_layer *);
+
+#endif /* NEURAL_LAYER_CUH */

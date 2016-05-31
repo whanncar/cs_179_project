@@ -1,6 +1,6 @@
 
-#ifndef NEURAL_NET_H
-#define NEURAL_NET_H
+#ifndef NEURAL_NET_CUH
+#define NEURAL_NET_CUH
 
 #include <stdlib.h>
 #include "../utils/utils.h"
@@ -36,4 +36,6 @@ neural_net *gpu_new_neural_net(int num_layers, int num_inputs,
                                int input_size, int output_size,
                                int *layer_weight_specs);
 
-#endif /* NEURAL_NET_H */
+void gpu_free_neural_net(neural_net *);
+
+#endif /* NEURAL_NET_CUH */

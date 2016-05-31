@@ -49,3 +49,19 @@ neural_net *gpu_new_neural_net(int num_layers, int num_inputs,
 }
 
 
+void gpu_free_neural_net(neural_net *nn) {
+
+    int i;
+
+    cudaFree(nn->input);
+
+    for (i = 0; i < nn->num_layers; i++) {
+        gpu_free_neural_layer(nn->layer_ptr[i]);
+    }
+
+    free(nn->layer_ptrs);
+
+    free(nn);
+
+}
+
