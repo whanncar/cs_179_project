@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "./neural_net/neural_net.h" 
+#include "neural_net/neural_net.h"
+#include "neural_net/neural_net_exec/neural_net_exec.h"
+#include "neural_net/neural_net_stat/neural_net_stat.h"
 #include "io_utils/fileio.h"
 
 
@@ -20,7 +22,7 @@ int main(int argc, char **argv) {
     float loss;
     float lambda;
 
-    lambda = .001;
+    lambda = .0001;
 
     if (argc == 1) {
         printf(usage);
@@ -90,11 +92,9 @@ void print_output(neural_net *net) {
     rows = output->num_rows;
     cols = output->num_cols;
 
-    cols = 10;
-
     for (i = 0; i < rows; i++) {
 
-        for (j = 0; j < cols; j++) {
+        for (j = 0; j < 10; j++) {
 
             printf("%f ", output->data[i * cols + j]);
 

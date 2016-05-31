@@ -1,123 +1,144 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "./neural_net/neural_net.h" 
+#include "neural_net/neural_net.h"
+#include "neural_net/neural_net_exec/neural_net_exec.h"
+#include "neural_net/neural_net_stat/neural_net_stat.h"
 #include "io_utils/fileio.h"
 
 
 neural_net *nn;
 sample_set *samples;
 
-void build_neural_net_from_cmds(int, char **);
+char usage[] = "usage: <number of samples> <sample length> <label length> "
+              "<number of hidden layers> <layer 1 size> ... <layer n size>\n";
 
+void initialize_neural_net(int, char **);
+void initialize_samples(int, char **);
+void print_output(neural_net *);
+void print_weights(neural_net *);
 
 int main(int argc, char **argv) {
 
-    float old_loss;
-    float new_loss;
-    float epsilon;
+    float loss;
     float lambda;
 
-    epsilon = .1;
-    lambda = .00000001;
+    lambda = .0001;
 
-    build_neural_net_from_cmds(argc, argv);
+    if (argc == 1) {
+        printf(usage);
+        return 0;
+    }
 
-    samples = get_samples_from_file("training_data/mnist_test.csv", 3000, 784);   
 
-    old_loss = calculate_loss(nn, samples);
+    initialize_neural_net(argc, argv);
+    initialize_samples(argc, argv);
 
-printf("%f\n", old_loss);
 
-    new_loss = old_loss + 1;
-
-    while ((old_loss - new_loss) * (old_loss - new_loss) > epsilon) {
-
-        old_loss = new_loss;
+    while (1) {
 
         train_neural_net(nn, samples, lambda);
+        loss = calculate_loss(nn, samples);
 
-        new_loss = calculate_loss(nn, samples); 
+        print_output(nn);
+/* 
+        print_weights(nn);
+*/
+        printf("%f, %f\n", loss, calculate_percent_predicted_correctly(nn, samples));
+    }
 
-        printf("%f, %f\n", new_loss, calculate_percent_predicted_correctly(nn, samples));
+    return 0;
+}
+
+void print_weights(neural_net *net) {
+
+    int i, j, k;
+    neural_layer *layer;
+
+
+    for (k = 0; k < net->num_layers; k++) {
+
+        layer = net->layer_ptrs[k];
+
+        for (i = 0; i < layer->w->num_rows; i++) {
+
+            for (j = 0; j < layer->w->num_cols; j++) {
+
+                printf("%f ", layer->w->data[i * layer->w->num_cols + j]);
+
+            }
+
+            printf("\n");
+
+        }
+
+        printf("\n");
 
     }
- 
 
 }
 
 
 
-/*
- * UNRESOLVED
- *
- */
+void print_output(neural_net *net) {
 
-void build_neural_net_from_cmds(int argc, char **argv) {
+    data_matrix *output;
+
+    output = net->output;
 
     int i, j;
-    int num_layers;
-    int *layer_specs;
 
-    num_layers = atoi(argv[1]);
+    int rows, cols;
 
-    layer_specs = (int *) malloc((num_layers + 1) * sizeof(int));
+    rows = output->num_rows;
+    cols = output->num_cols;
 
-    for (i = 0; i < num_layers + 1; i++) {
-        layer_specs[i] = atoi(argv[i + 2]);
-    }
+    for (i = 0; i < rows; i++) {
 
-    nn = (neural_net *) malloc(sizeof(neural_net));
+        for (j = 0; j < 10; j++) {
 
-    nn->num_layers = num_layers;
+            printf("%f ", output->data[i * cols + j]);
 
-    nn->layer_ptrs = (neural_layer **) malloc(num_layers * sizeof(neural_layer *));
-
-    for (i = 0; i < num_layers; i++) {
-
-        nn->layer_ptrs[i] = (neural_layer *) malloc(sizeof(neural_layer));
-
-    }
-
-    nn->layer_ptrs[0]->input = new_vector(layer_specs[0]);
-
-    for (i = 0; i < num_layers - 1; i++) {
-
-        nn->layer_ptrs[i]->output = new_vector(layer_specs[i + 1]);
-
-        nn->layer_ptrs[i + 1]->input = nn->layer_ptrs[i]->output;
-
-    }
-
-    nn->layer_ptrs[num_layers - 1]->output = new_vector(layer_specs[num_layers]);
-
-    nn->input = nn->layer_ptrs[0]->input;
-    nn->output = nn->layer_ptrs[num_layers - 1]->output;
-
-    for (i = 0; i < num_layers; i++) {
-
-        nn->layer_ptrs[i]->r = new_vector(nn->layer_ptrs[i]->output->size);
-        nn->layer_ptrs[i]->t = new_vector(nn->layer_ptrs[i]->output->size);
-        nn->layer_ptrs[i]->s = new_vector(nn->layer_ptrs[i]->output->size);
-        nn->layer_ptrs[i]->dL_ds_local = new_vector(nn->layer_ptrs[i]->output->size);
-        nn->layer_ptrs[i]->dL_ds_global = new_vector(nn->layer_ptrs[i]->output->size);
-
-        for (j = 0; j < nn->layer_ptrs[i]->t->size; j++) {
-            nn->layer_ptrs[i]->t->data[j] = 1;
         }
 
+        printf("\n");
+
     }
+
+}
+
+
+void initialize_neural_net(int argc, char **argv) {
+
+    int num_layers;
+    int num_inputs;
+    int input_size;
+    int output_size;
+    int *layer_weight_specs;
+    int i;   
+
+    num_inputs = atoi(argv[1]);
+    input_size = atoi(argv[2]);
+    output_size = atoi(argv[3]);
+    num_layers = atoi(argv[4]);
+
+    layer_weight_specs = (int *) malloc(num_layers * sizeof(int));
 
     for (i = 0; i < num_layers; i++) {
-
-        nn->layer_ptrs[i]->w = new_matrix(nn->layer_ptrs[i]->output->size,
-                                          nn->layer_ptrs[i]->input->size);
-
-        fill_matrix_rand(nn->layer_ptrs[i]->w, -.5, .5);
-
-        nn->layer_ptrs[i]->w_T = new_matrix(nn->layer_ptrs[i]->w->num_cols,
-                                            nn->layer_ptrs[i]->w->num_rows);
-
-        compute_matrix_transpose(nn->layer_ptrs[i]->w, nn->layer_ptrs[i]->w_T);
+        layer_weight_specs[i] = atoi(argv[5 + i]);
     }
 
+    num_layers += 1;
+
+    nn = new_neural_net(num_layers, num_inputs, input_size, output_size, layer_weight_specs);
+
+    initialize_neural_net_weights(nn);
+
+    free(layer_weight_specs);
+}
+
+
+void initialize_samples(int argc, char **argv) {
+
+    samples = get_samples_from_file("training_data/mnist_test.csv",
+                                    atoi(argv[1]), atoi(argv[2]));
 }
