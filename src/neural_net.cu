@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "neural_net.h"
-#include "../utils/multShare.cuh"
+#include "neural_net.cuh"
+#include "multShare.cuh"
+
 #include <math.h>
 
 
@@ -35,7 +36,7 @@ float sigmoid_filter(float x) {
 
 void forward_propagate_layer(neural_layer *layer) {
 
-    calculate_matrix_times_matrix(layer->w, layer->input, layer->s);
+    gpu_calculate_matrix_times_matrix(layer->w, layer->input, layer->s);
 
     /* Calculate output by filtering raw weighted sums */
     apply_filter_to_matrix_componentwise(layer->s,
@@ -77,7 +78,7 @@ void calculate_dL_ds_layer(neural_layer *layer,
 
     data_matrix *temp;
 
-    calculate_matrix_times_matrix(next_layer->w_T,
+    gpu_calculate_matrix_times_matrix(next_layer->w_T,
                                 next_layer->dL_ds,
                                 layer->dL_ds);
 
@@ -158,7 +159,7 @@ void update_dL_dw_layer(neural_layer *layer) {
 
     compute_matrix_transpose(layer->input, temp);
 
-    calculate_matrix_times_matrix(layer->dL_ds, temp, layer->dL_dw);
+    gpu_calculate_matrix_times_matrix(layer->dL_ds, temp, layer->dL_dw);
 
     free_matrix(temp);
 

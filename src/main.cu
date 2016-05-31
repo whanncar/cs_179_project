@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "neural_net/neural_net.h" 
-#include "io_utils/fileio.h"
-#include "utils/multShare.cuh"
+#include "neural_net.cuh" 
+#include "fileio.cuh"
+#include "multShare.cuh"
+#include "utils.cuh"
 
 
 neural_net *nn;

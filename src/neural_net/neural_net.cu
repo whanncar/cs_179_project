@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "neural_net.h"
+#include "neural_net.cuh"
 #include "../utils/multShare.cuh"
+
 #include <math.h>
 
 
