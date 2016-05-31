@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "neural_net.h"
 
 
@@ -17,21 +18,31 @@ neural_net *gpu_new_neural_net(int num_layers, int num_inputs,
         (neural_layer **) malloc(num_layers * sizeof(neural_layer *));
 
 
+printf("a\n");
+
     /* Make layers */
     nn->layer_ptrs[0] = gpu_new_neural_layer(input_size,
                                              layer_weight_specs[0],
                                              num_inputs);
 
+printf("b\n");
+
     for (i = 1; i < num_layers - 1; i++) {
         nn->layer_ptrs[i] = gpu_new_neural_layer(layer_weight_specs[i - 1],
                                                  layer_weight_specs[i],
                                                  num_inputs);
+
+printf("c\n");
+
     }
+
 
     nn->layer_ptrs[i] = gpu_new_neural_layer(layer_weight_specs[i - 1],
                                              output_size,
                                              num_inputs);
 
+
+printf("d\n");
 
     /* Connect inputs and outputs of adjacent layers */
     nn->layer_ptrs[0]->input = gpu_new_matrix(input_size, num_inputs);
@@ -56,7 +67,7 @@ void gpu_free_neural_net(neural_net *nn) {
     cudaFree(nn->input);
 
     for (i = 0; i < nn->num_layers; i++) {
-        gpu_free_neural_layer(nn->layer_ptr[i]);
+        gpu_free_neural_layer(nn->layer_ptrs[i]);
     }
 
     free(nn->layer_ptrs);

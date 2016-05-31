@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "neural_net/neural_net.cuh"
-
+#include "neural_net/neural_net.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 neural_net *nn;
 neural_net *nn_dev;
@@ -18,12 +19,24 @@ void print_weights(neural_net *);
 
 int main(int argc, char **argv) {
 
+    float test = 10;
+
     if (argc == 1) {
         printf(usage);
         return 0;
     }
 
     initialize_neural_net(argc, argv);
+
+    cudaMemcpy(nn->layer_ptrs[0]->w->data, &test, sizeof(float), cudaMemcpyHostToDevice);
+
+    test = 0;
+
+    cudaMemcpy(&test, nn->layer_ptrs[0]->w->data, sizeof(float), cudaMemcpyDeviceToHost);
+
+    printf("%f\n", test);
+
+    gpu_free_neural_net(nn);
 
     return 0;
 }

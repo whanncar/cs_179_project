@@ -2,6 +2,7 @@
 #ifndef NEURAL_LAYER_CUH
 #define NEURAL_LAYER_CUH
 
+#include "../../../src/utils/utils.h"
 #include "../utils/utils.h"
 
 /* Structs */

@@ -1,4 +1,4 @@
-#include "utils.cuh"
+#include "utils.h"
 
 
 
