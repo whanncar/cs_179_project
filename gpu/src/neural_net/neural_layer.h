@@ -33,4 +33,6 @@ neural_layer *gpu_new_neural_layer(int input_length,
 
 void gpu_free_neural_layer(neural_layer *);
 
+void copy_neural_layer_to_gpu(neural_layer *layer, neural_layer *layer_dev);
+
 #endif /* NEURAL_LAYER_CUH */

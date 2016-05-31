@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "neural_net.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 
 neural_net *gpu_new_neural_net(int num_layers, int num_inputs,
@@ -60,6 +62,7 @@ printf("d\n");
 }
 
 
+
 void gpu_free_neural_net(neural_net *nn) {
 
     int i;
@@ -75,4 +78,24 @@ void gpu_free_neural_net(neural_net *nn) {
     free(nn);
 
 }
+
+
+
+
+void copy_neural_net_to_gpu(neural_net *nn, neural_net *nn_dev) {
+
+    int i;
+
+    cudaMemcpy(nn_dev->input->data, nn->input->data,
+               nn->input->num_rows *
+               nn->input->num_cols *
+               sizeof(float), cudaMemcpyHostToDevice);
+
+    for (i = 0; i < nn->num_layers; i++) {
+        copy_neural_layer_to_gpu(nn->layer_ptrs[i], nn_dev->layer_ptrs[i]);
+    }
+
+}
+
+
 

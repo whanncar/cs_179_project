@@ -1,4 +1,6 @@
 #include "neural_layer.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 
 neural_layer *gpu_new_neural_layer(int input_length,
@@ -39,3 +41,25 @@ void gpu_free_neural_layer(neural_layer *layer) {
     free(layer);
 
 }
+
+
+
+
+void copy_neural_layer_to_gpu(neural_layer *layer, neural_layer *layer_dev) {
+
+    cudaMemcpy(layer_dev->w->data, layer->w->data,
+               layer->w->num_rows *
+               layer->w->num_cols *
+               sizeof(float),
+               cudaMemcpyHostToDevice);
+
+
+    cudaMemcpy(layer_dev->w_T->data, layer->w_T->data,
+               layer->w_T->num_rows *
+               layer->w_T->num_cols *
+               sizeof(float),
+               cudaMemcpyHostToDevice);
+
+
+}
+

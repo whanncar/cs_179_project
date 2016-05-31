@@ -38,4 +38,6 @@ neural_net *gpu_new_neural_net(int num_layers, int num_inputs,
 
 void gpu_free_neural_net(neural_net *);
 
+void copy_neural_net_to_gpu(neural_net *nn, neural_net *nn_dev);
+
 #endif /* NEURAL_NET_CUH */

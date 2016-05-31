@@ -55,21 +55,22 @@ void gpu_calc_lin_comb_of_mats(float a, data_matrix *m1,
                                float b, data_matrix *m2,
                                data_matrix *result) {
 
-/* TODO */
+callLinCombOfVectors(a, m1->data, b, float m2->data,
+                     m1->num_rows * m1->num_cols, result->data);
 
 }
 
 
 void gpu_add_constant_to_matrix(float c, data_matrix *m, data_matrix *result) {
 
-/* TODO */
+callAddConstantToVector(c, m->data, m->num_rows * m->num_cols, result->data);
 
 }
 
 
 void gpu_multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matrix *result) {
 
-/* TODO */
+callMultVectsCompwise(m1->data, m2->data, m1->num_rows * m2->num_rows, result->data);
 
 }
 
@@ -93,6 +94,6 @@ void gpu_apply_filter_to_matrix_componentwise(data_matrix *m,
 
 float gpu_calculate_matrix_distance(data_matrix *m1, data_matrix *m2) {
 
-/* TODO */
+return callCalcVectDist(m1->data, m2->data, m1->num_rows * m1->num_cols);
 
 }

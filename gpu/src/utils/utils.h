@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "../../../src/utils/utils.h"
-
+#include "utils.cuh"
 
 /* Functions */
 
