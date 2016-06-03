@@ -24,7 +24,7 @@ void shmemTransposeKernel(const float *input, float *output,
 
     for (k = 0; k < 4; k++) {
         if ((i < num_rows) && (j + k < num_cols)) {
-            in_data[offset_i_data + 65 * (j_data + k)] = input[i + n * (j + k)];
+            in_data[offset_i_data + 65 * (j_data + k)] = input[i + num_cols * (j + k)];
         }
     }
     __syncthreads();
@@ -127,7 +127,7 @@ void multVectsCompwise(float *v1, float *v2, int length, float *v_result) {
 
 
 __global__
-void calcVectsSquareDiff(float *v1, float *v2, int length; float *v_result) {
+void calcVectsSquareDiff(float *v1, float *v2, int length, float *v_result) {
 
     float v1_val;
     float v2_val;
@@ -394,14 +394,14 @@ float callCalcVectDist(float *v1, float *v2, int length) {
 
     cudaMalloc((void **) &sq_diff, length * sizeof(float));
 
-    calcVectsSquareDiff<<<blocks, threadsPerBlock>>>(v1, v2, int length, sq_diff);
+    calcVectsSquareDiff<<<blocks, threadsPerBlock>>>(v1, v2, length, sq_diff);
 
 
     cudaMalloc((void **) &result_dev, sizeof(float));
 
     cudaMemset(result_dev, 0, sizeof(float));
 
-    sumVectorEntries<<<blocks, threadsPerBlock, threadsPerBlock>>>(sq_diff, int length, result_dev);
+    sumVectorEntries<<<blocks, threadsPerBlock, threadsPerBlock>>>(sq_diff, length, result_dev);
 
     cudaMemcpy(&result, result_dev, sizeof(float), cudaMemcpyDeviceToHost);
 

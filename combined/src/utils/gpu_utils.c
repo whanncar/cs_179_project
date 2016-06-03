@@ -47,7 +47,7 @@ void gpu_calculate_matrix_times_matrix(data_matrix *m1,
                                        data_matrix *result) {
 
 callMatrixMultiply(m1->data, m2->data, m1->num_rows,
-                   m1->num_cols, m2->num_cols, result);
+                   m1->num_cols, m2->num_cols, result->data);
 
 }
 
@@ -56,7 +56,7 @@ void gpu_calc_lin_comb_of_mats(float a, data_matrix *m1,
                                float b, data_matrix *m2,
                                data_matrix *result) {
 
-callLinCombOfVectors(a, m1->data, b, float m2->data,
+callLinCombOfVectors(a, m1->data, b, m2->data,
                      m1->num_rows * m1->num_cols, result->data);
 
 }

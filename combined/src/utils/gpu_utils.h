@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "utils.h"
-#include "utils.cuh"
+#include "gpu_utils.cuh"
 
 /* Functions */
 
