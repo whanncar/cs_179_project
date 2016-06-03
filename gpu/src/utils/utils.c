@@ -46,7 +46,8 @@ void gpu_calculate_matrix_times_matrix(data_matrix *m1,
                                        data_matrix *m2,
                                        data_matrix *result) {
 
-/* TODO */
+callMatrixMultiply(m1->data, m2->data, m1->num_rows,
+                   m1->num_cols, m2->num_cols, result);
 
 }
 
@@ -77,16 +78,15 @@ callMultVectsCompwise(m1->data, m2->data, m1->num_rows * m2->num_rows, result->d
 
 void gpu_compute_matrix_transpose(data_matrix *m, data_matrix *result) {
 
-/* TODO */
+callMatrixTranspose(m->data, result->data, m->num_rows, m->num_cols);
 
 }
 
 
-void gpu_apply_filter_to_matrix_componentwise(data_matrix *m,
-                                              float (*filter)(float),
-                                              data_matrix *result) {
+void gpu_apply_sigmoid_to_matrix_componentwise(data_matrix *m,
+                                               data_matrix *result) {
 
-/* TODO */
+callApplySigmoidToVector(m->data, m->num_rows * m->num_cols, result->data);
 
 }
 

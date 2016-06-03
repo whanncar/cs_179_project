@@ -1,9 +1,50 @@
+#include <math.h>
 
 
+/* Kernels */
 
 
+__global__
+void shmemTransposeKernel(const float *input, float *output,
+                          int num_rows, int num_cols) {
+
+    __shared__ float in_data[65*64];
+    __shared__ float out_data[65*64];
 
 
+    int i = threadIdx.x + 64 * blockIdx.x;
+    int j = 4 * threadIdx.y + 64 * blockIdx.y;
+
+    int i_data = threadIdx.x;
+    int j_data = 4 * threadIdx.y;
+    int offset_i_data = i_data + i_data / 32;
+    int offset_j_data = j_data + j_data / 32;
+    int k;
+
+    for (k = 0; k < 4; k++) {
+        if ((i < num_rows) && (j + k < num_cols)) {
+            in_data[offset_i_data + 65 * (j_data + k)] = input[i + n * (j + k)];
+        }
+    }
+    __syncthreads();
+
+    for (k = 0; k < 4; k++)
+        out_data[offset_j_data + k + 65 * (i_data)]
+                = in_data[offset_i_data + 65 * (j_data + k)];
+
+    __syncthreads();
+
+    i = threadIdx.x + 64 * blockIdx.y;
+    j = 4 * threadIdx.y + 64 * blockIdx.x;
+
+    for (k = 0; k < 4; k++) {
+        if ((i < num_cols) && (j + k < num_rows)) {
+            output[i + n * (j + k)] = out_data[offset_i_data + 65 * (j_data + k)];
+        }
+    }
+}
+
+/* Make sure this ^ works */
 
 
 
@@ -156,13 +197,102 @@ void sumVectorEntries(float *v1, int length, float *result) {
 }
 
 
+__global__
+void applySigmoidToVector(float *v1, int length, float *result) {
+
+    int index;
+    float input;
+    float output;
+
+    for (index = blockDim.x * blockIdx.x + threadIdx.x;
+         index < length;
+         index += gridDim.x * blockDim.x) {
+
+        input = v1[index];
+
+        output = 1 / (1 + expf(-input));
+
+        result[index] = output; 
+
+    }
+}
+
+
+__global__
+void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols, float *result) {
+
+
+    __shared__ float m1_sub[64][64];
+    __shared__ float m2_sub[64][64];
+    __shared__ float res_sub[64][64];
+
+
+    int row, col, k, l;
+
+    /* Initialize the result to 0 */
+    res_sub[threadIdx.x][threadIdx.y] = 0;
+
+    for (k = 0; k < m1_cols / 64 + 1; k++) {
+
+        /* Obtain the submatrices */
+
+        row = blockIdx.x * 64 + threadIdx.x;
+        col = k * 64 + threadIdx.y;
+
+        if ((row < m1_rows) && (col < m1_cols)) {
+            m1_sub[threadIdx.x][threadIdx.y] = m1[row * m1_cols + col];
+        }
+        else {
+            m1_sub[threadIdx.x][threadIdx.y] = 0;
+        }
+
+        row = k * 64 + threadIdx.x;
+        col = blockIdx.y * 64 + threadIdx.y;
+
+        if ((row < m1_cols) && (col < m2_cols)) {
+            m2_sub[threadIdx.x][threadIdx.y] = m2[row * m2_cols + col];
+        }
+        else {
+            m2_sub[threadIdx.x][threadIdx.y] = 0;
+        }
+
+        __syncthreads();
+
+        /* Multiply the submatrices */
+
+        for (l = 0; l < 64; l++) {
+            res_sub[threadIdx.x][threadIdx.y] += m1_sub[threadIdx.x][l] * m2_sub[l][threadIdx.y];
+        }
+
+    }
+
+    /* Store the result */
+
+    row = blockIdx.x * 64 + threadIdx.x;
+    col = blockIdx.y * 64 + threadIdx.y;
+
+    if ((row < m1_rows) && (col < m2_cols)) {
+        result[row * m2_cols + col] = res_sub[threadIdx.x][threadIdx.y];
+    }
+
+}
 
 
 
 
+/* Calls */
 
 
-
+void callMatrixTranspose(float *d_input,
+                         float *d_output,
+                         int num_rows,
+                         int num_cols)
+{
+    dim3 blockSize(64, 16);
+    dim3 gridSize(num_rows / 64 + 1, num_cols / 64 + 1);
+    shmemTransposeKernel<<<gridSize, blockSize>>>(d_input, d_output, num_rows, num_cols);
+}
+ 
 
 
 
@@ -282,3 +412,36 @@ float callCalcVectDist(float *v1, float *v2, int length) {
 
 }
 
+
+
+void callApplySigmoidToVector(float *v1, int length, float *result) {
+
+    int threadsPerBlock;
+    int blocks;
+
+    threadsPerBlock = 512;
+
+    blocks = length / threadsPerBlock;
+
+    if (length % threadsPerBlock) {
+        blocks++;
+    }
+
+    if (blocks > 20000) {
+        blocks = 20000;
+    }
+
+    applySigmoidToVector<<<blocks, threadsPerBlock>>>(v1, length, result);
+
+}
+
+
+void callMatrixMultiply(float *m1, float *m2, int m1_rows,
+                        int m1_cols, int m2_cols, float *result) {
+
+    dim3 blockSize(64, 64);
+    dim3 gridSize(m1_rows / 64 + 1, m2_cols / 64 + 1);   
+
+    matrixMultiply<<<gridSize, blockSize>>>(m1, m2, m1_rows, m1_cols, m2_cols, result);
+
+}

@@ -53,11 +53,7 @@ void gpu_update_w_all_layers(neural_net *nn, float step) {
 
 
 
-float sigmoid_filter(float x) {
 
-    return 1 / (1 + expf(-x));
-
-}
 
 
 void gpu_forward_propagate_layer(neural_layer *layer) {
@@ -65,8 +61,7 @@ void gpu_forward_propagate_layer(neural_layer *layer) {
     gpu_calculate_matrix_times_matrix(layer->w, layer->input, layer->s);
 
     /* Calculate output by filtering raw weighted sums */
-    gpu_apply_filter_to_matrix_componentwise(layer->s,
-                                             &sigmoid_filter,
+    gpu_apply_sigmoid_to_matrix_componentwise(layer->s,
                                              layer->output);
 
 }
