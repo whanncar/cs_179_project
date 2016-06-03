@@ -34,8 +34,10 @@ int main(int argc, char **argv) {
     initialize_samples(argc, argv);
     gpu_initialize_samples();
 
+    gpu_set_neural_net_input(nn_dev, samples_dev);
+
     train_neural_net(nn, samples, lambda);
-    gpu_train_neural_net(nn_dev, samples_dev, lambda);
+    gpu_train_neural_net(nn_dev, lambda);
 
     printf("%f\n", calculate_loss(nn, samples));
     printf("%f\n", gpu_calculate_loss(nn_dev, samples_dev));

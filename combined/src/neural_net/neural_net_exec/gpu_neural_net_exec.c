@@ -1,7 +1,7 @@
 #include "gpu_neural_net_exec.h"
 
 
-void gpu_train_neural_net(neural_net *nn, sample_set *set, float step) {
+void gpu_train_neural_net(neural_net *nn, float step) {
 
     gpu_forward_propagate_neural_net(nn);
 /*
@@ -46,6 +46,10 @@ void gpu_backward_propagate_neural_net(neural_net *nn, data_matrix *expected_out
 }
 
 
+void gpu_set_neural_net_input(neural_net *nn_dev, sample_set *samples_dev) {
 
+    nn_dev->input->data = samples_dev->sample_inputs->data;
+
+}
 
 
