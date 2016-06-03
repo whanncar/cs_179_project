@@ -46,7 +46,8 @@ void gpu_calculate_matrix_times_matrix(data_matrix *m1,
                                        data_matrix *m2,
                                        data_matrix *result) {
 
-/* TODO */
+callMatrixMultiply(m1->data, m2->data, m1->num_rows,
+                   m1->num_cols, m2->num_cols, result);
 
 }
 
