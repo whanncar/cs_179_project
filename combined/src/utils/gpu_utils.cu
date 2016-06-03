@@ -414,7 +414,7 @@ float callCalcVectDist(float *v1, float *v2, int length) {
 
 }
 
-
+extern "C"
 void callApplySigmoidToVector(float *v1, int length, float *result) {
 
     int threadsPerBlock;

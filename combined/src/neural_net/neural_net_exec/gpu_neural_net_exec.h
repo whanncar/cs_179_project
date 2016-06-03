@@ -9,7 +9,7 @@
 void gpu_forward_propagate_neural_net(neural_net *);
 void gpu_backward_propagate_neural_net(neural_net *, data_matrix *, float);
 
-void gpu_train_neural_net(neural_net *nn, sample_set *set, float step);
+void gpu_train_neural_net(neural_net *nn, float step);
 
 #endif /* GPU_NEURAL_NET_EXEC_H */
 
