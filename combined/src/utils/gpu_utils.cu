@@ -266,6 +266,8 @@ void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols,
             res_sub[threadIdx.x][threadIdx.y] += m1_sub[threadIdx.x][l] * m2_sub[l][threadIdx.y];
         }
 
+        __syncthreads();
+
     }
 
     /* Store the result */
