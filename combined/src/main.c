@@ -14,9 +14,28 @@ void initialize_samples(int, char **);
 void gpu_initialize_samples();
 void print_output(neural_net *);
 void print_weights(neural_net *);
+void print_matrix(data_matrix *);
 
 int main(int argc, char **argv) {
 
+    data_matrix *m1, *m2, *m3;
+    data_matrix *m1_dev, *m2_dev, *m3_dev;
+
+    m1 = new_data_matrix(10, 10);
+    m2 = new_data_matrix(10, 10);
+    m3 = new_data_matrix(10, 10);
+
+    fill_matrix_rand(m1, 0, 1);
+    fill_matrix_rand(m2, 0, 1);
+
+    calculate_matrix_times_matrix(m1, m2, m3);
+
+    print_matrix(m1);
+    print_matrix(m2);
+    print_matrix(m3);
+
+
+/*
     float loss;
     float lambda;
 
@@ -42,7 +61,7 @@ int main(int argc, char **argv) {
     printf("%f\n", calculate_loss(nn, samples));
     printf("%f\n", gpu_calculate_loss(nn_dev, samples_dev));
 
-/*
+
     while (1) {
 
         train_neural_net(nn, samples, lambda);
@@ -57,6 +76,34 @@ int main(int argc, char **argv) {
 */
     return 0;
 }
+
+/* Testing */
+
+void print_matrix(data_matrix *m) {
+
+    int i, j;
+
+    for (i = 0; i < m->num_rows; i++) {
+
+        for (j = 0; j < m->num_cols; j++) {
+
+            printf("%f ", m->data[i * m->num_cols + j]);
+
+        }
+
+        printf("\n");
+
+    }
+
+    printf("\n");
+
+}
+
+
+/* End testing */
+
+
+
 
 void print_weights(neural_net *net) {
 

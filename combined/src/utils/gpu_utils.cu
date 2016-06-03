@@ -1,6 +1,6 @@
-#include <math.h>
 extern "C" {
 #include "gpu_utils_cuda.h"
+#include <math.h>
 }
 
 /* Kernels */
@@ -415,7 +415,6 @@ float callCalcVectDist(float *v1, float *v2, int length) {
 }
 
 
-extern "C"
 void callApplySigmoidToVector(float *v1, int length, float *result) {
 
     int threadsPerBlock;
