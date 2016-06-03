@@ -1,4 +1,4 @@
-
+#include <math.h>
 
 
 
@@ -197,7 +197,25 @@ void sumVectorEntries(float *v1, int length, float *result) {
 }
 
 
+__global__
+void applySigmoidToVector(float *v1, int length, float *result) {
 
+    int index;
+    float input;
+    float output;
+
+    for (index = blockDim.x * blockIdx.x + threadIdx.x;
+         index < length;
+         index += gridDim.x * blockDim.x) {
+
+        input = v1[index];
+
+        output = 1 / (1 + expf(-input));
+
+        result[index] = output; 
+
+    }
+}
 
 
 
@@ -332,3 +350,25 @@ float callCalcVectDist(float *v1, float *v2, int length) {
 
 }
 
+
+
+void callApplySigmoidToVector(float *v1, int length, float *result) {
+
+    int threadsPerBlock;
+    int blocks;
+
+    threadsPerBlock = 512;
+
+    blocks = length / threadsPerBlock;
+
+    if (length % threadsPerBlock) {
+        blocks++;
+    }
+
+    if (blocks > 20000) {
+        blocks = 20000;
+    }
+
+    applySigmoidToVector<<<blocks, threadsPerBlock>>>(v1, length, result);
+
+}
