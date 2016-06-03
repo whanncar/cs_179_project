@@ -11,11 +11,12 @@ char usage[] = "usage: <number of samples> <sample length> <label length> "
 void initialize_neural_net(int, char **);
 void gpu_initialize_neural_net(int, char **);
 void initialize_samples(int, char **);
+void gpu_initialize_samples();
 void print_output(neural_net *);
 void print_weights(neural_net *);
 
 int main(int argc, char **argv) {
-/*
+
     float loss;
     float lambda;
 
@@ -25,15 +26,21 @@ int main(int argc, char **argv) {
         printf(usage);
         return 0;
     }
-*/
 
     initialize_neural_net(argc, argv);
     gpu_initialize_neural_net(argc, argv);
     copy_neural_net_to_gpu(nn, nn_dev);
-/*
+
     initialize_samples(argc, argv);
+    gpu_initialize_samples();
 
+    train_neural_net(nn, samples, lambda);
+    gpu_train_neural_net(nn_dev, samples_dev, lambda);
 
+    printf("%f\n", calculate_loss(nn, samples));
+    printf("%f\n", gpu_calculate_loss(nn_dev, samples_dev));
+
+/*
     while (1) {
 
         train_neural_net(nn, samples, lambda);
@@ -172,4 +179,32 @@ void initialize_samples(int argc, char **argv) {
 }
 
 
+void gpu_initialize_samples() {
 
+    samples_dev = (sample_set *) malloc(sizeof(sample_set));
+
+    samples_dev->sample_labels = 
+        gpu_new_matrix(samples->sample_labels->num_rows,
+                       samples->sample_labels->num_cols);
+
+    samples_dev->sample_inputs = 
+        gpu_new_matrix(samples->sample_inputs->num_rows,
+                       samples->sample_inputs->num_cols);
+
+    cudaMemcpy(samples_dev->sample_labels->data,
+               samples->sample_labels->data,
+               samples->sample_labels->num_rows *
+               samples->sample_labels->num_cols *
+               sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    cudaMemcpy(samples_dev->sample_inputs->data,
+               samples->sample_inputs->data,
+               samples->sample_inputs->num_rows *
+               samples->sample_inputs->num_cols *
+               sizeof(float),
+               cudaMemcpyHostToDevice);
+
+
+
+}

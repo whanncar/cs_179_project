@@ -1,6 +1,7 @@
 #include <math.h>
-#include "gpu_utils.cuh"
-
+extern "C" {
+#include "gpu_utils_cuda.h"
+}
 
 /* Kernels */
 
@@ -40,7 +41,7 @@ void shmemTransposeKernel(const float *input, float *output,
 
     for (k = 0; k < 4; k++) {
         if ((i < num_cols) && (j + k < num_rows)) {
-            output[i + n * (j + k)] = out_data[offset_i_data + 65 * (j_data + k)];
+            output[i + num_cols * (j + k)] = out_data[offset_i_data + 65 * (j_data + k)];
         }
     }
 }
@@ -192,7 +193,7 @@ void sumVectorEntries(float *v1, int length, float *result) {
     }
 
     if (threadIdx.x == 0) {
-        atomicAdd(vals + threadIdx.x, result);
+        atomicAdd(result, vals[threadIdx.x]);
     }
 
 }
@@ -282,7 +283,7 @@ void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols,
 
 
 /* Calls */
-
+extern "C"
 
 void callMatrixTranspose(float *d_input,
                          float *d_output,
@@ -414,7 +415,7 @@ float callCalcVectDist(float *v1, float *v2, int length) {
 }
 
 
-
+extern "C"
 void callApplySigmoidToVector(float *v1, int length, float *result) {
 
     int threadsPerBlock;

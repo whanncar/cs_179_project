@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include "neural_net/neural_net.h"
 #include "neural_net/neural_net_exec/neural_net_exec.h"
