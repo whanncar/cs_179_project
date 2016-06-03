@@ -192,7 +192,7 @@ void sumVectorEntries(float *v1, int length, float *result) {
     }
 
     if (threadIdx.x == 0) {
-        atomicAdd(vals[threadIdx.x], result);
+        atomicAdd(vals + threadIdx.x, result);
     }
 
 }
