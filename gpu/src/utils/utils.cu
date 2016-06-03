@@ -4,6 +4,41 @@
 
 
 
+__global__
+void shmemTransposeKernel(const float *input, float *output, int n) {
+
+    __shared__ float in_data[65*64];
+    __shared__ float out_data[65*64];
+
+
+    int i = threadIdx.x + 64 * blockIdx.x;
+    int j = 4 * threadIdx.y + 64 * blockIdx.y;
+
+    int i_data = threadIdx.x;
+    int j_data = 4 * threadIdx.y;
+    int offset_i_data = i_data + i_data / 32;
+    int offset_j_data = j_data + j_data / 32;
+    int k;
+
+    for (k = 0; k < 4; k++)
+        in_data[offset_i_data + 65 * (j_data + k)] = input[i + n * (j + k)];
+
+    __syncthreads();
+
+    for (k = 0; k < 4; k++)
+        out_data[offset_j_data + k + 65 * (i_data)]
+                = in_data[offset_i_data + 65 * (j_data + k)];
+
+    __syncthreads();
+
+    i = threadIdx.x + 64 * blockIdx.y;
+    j = 4 * threadIdx.y + 64 * blockIdx.x;
+
+    for (k = 0; k < 4; k++)
+        output[i + n * (j + k)] = out_data[offset_i_data + 65 * (j_data + k)];
+}
+
+
 
 
 
@@ -162,7 +197,15 @@ void sumVectorEntries(float *v1, int length, float *result) {
 
 
 
-
+void cudaTranspose(float *d_input,
+                   float *d_output,
+                   int n)
+{
+    dim3 blockSize(64, 16);
+    dim3 gridSize(n / 64, n / 64);
+    shmemTransposeKernel<<<gridSize, blockSize>>>(d_input, d_output, n);
+}
+ 
 
 
 
