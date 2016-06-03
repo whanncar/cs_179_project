@@ -1,0 +1,24 @@
+
+Notes
+
+in train_neural_net, set_neural_net_input only needs to happen during the initial step not at every iteration
+
+
+//Easiest way to implement a conv net
+
+sum the images for each number
+this results in 10 "reference" images
+
+Convolve each reference image with the input image
+
+take the max over 2x2 pixel sections
+
+feed the maxes into the neural network as the inputs
+
+only do this for the first stage.  This will not change back propagation at all
+
+
+
+if all you do is take the max correlation over the entire image and compare that with the max corr obtained from convolving it with the other 9 reference images one can achieve 78% predictive accuracy (which isn't bad)  
+
+Zero padding is optional but some is recommeded 
