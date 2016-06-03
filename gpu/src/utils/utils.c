@@ -77,7 +77,7 @@ callMultVectsCompwise(m1->data, m2->data, m1->num_rows * m2->num_rows, result->d
 
 void gpu_compute_matrix_transpose(data_matrix *m, data_matrix *result) {
 
-/* TODO */
+callMatrixTranspose(m->data, result->data, m->num_rows, m->num_cols);
 
 }
 

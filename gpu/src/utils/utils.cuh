@@ -10,3 +10,4 @@ void callMultVectsCompwise(float *v1, float *v2, int length, float *v_result);
 
 float callCalcVectDist(float *v1, float *v2, int length);
 
+void callMatrixTranspose(float *in, float *out, int r, int c);

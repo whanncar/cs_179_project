@@ -5,7 +5,8 @@
 
 
 __global__
-void shmemTransposeKernel(const float *input, float *output, int n) {
+void shmemTransposeKernel(const float *input, float *output,
+                          int num_rows, int num_cols) {
 
     __shared__ float in_data[65*64];
     __shared__ float out_data[65*64];
@@ -20,9 +21,11 @@ void shmemTransposeKernel(const float *input, float *output, int n) {
     int offset_j_data = j_data + j_data / 32;
     int k;
 
-    for (k = 0; k < 4; k++)
-        in_data[offset_i_data + 65 * (j_data + k)] = input[i + n * (j + k)];
-
+    for (k = 0; k < 4; k++) {
+        if ((i < num_rows) && (j + k < num_cols)) {
+            in_data[offset_i_data + 65 * (j_data + k)] = input[i + n * (j + k)];
+        }
+    }
     __syncthreads();
 
     for (k = 0; k < 4; k++)
@@ -34,11 +37,14 @@ void shmemTransposeKernel(const float *input, float *output, int n) {
     i = threadIdx.x + 64 * blockIdx.y;
     j = 4 * threadIdx.y + 64 * blockIdx.x;
 
-    for (k = 0; k < 4; k++)
-        output[i + n * (j + k)] = out_data[offset_i_data + 65 * (j_data + k)];
+    for (k = 0; k < 4; k++) {
+        if ((i < num_cols) && (j + k < num_rows)) {
+            output[i + n * (j + k)] = out_data[offset_i_data + 65 * (j_data + k)];
+        }
+    }
 }
 
-
+/* Make sure this ^ works */
 
 
 
@@ -197,13 +203,14 @@ void sumVectorEntries(float *v1, int length, float *result) {
 
 
 
-void cudaTranspose(float *d_input,
-                   float *d_output,
-                   int n)
+void callMatrixTranspose(float *d_input,
+                         float *d_output,
+                         int num_rows,
+                         int num_cols)
 {
     dim3 blockSize(64, 16);
-    dim3 gridSize(n / 64, n / 64);
-    shmemTransposeKernel<<<gridSize, blockSize>>>(d_input, d_output, n);
+    dim3 gridSize(num_rows / 64 + 1, num_cols / 64 + 1);
+    shmemTransposeKernel<<<gridSize, blockSize>>>(d_input, d_output, num_rows, num_cols);
 }
  
 
