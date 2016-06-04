@@ -1,12 +1,12 @@
 #include "gpu_neural_net_exec.h"
 
 
-void gpu_train_neural_net(neural_net *nn, float step) {
+void gpu_train_neural_net(neural_net *nn, sample_set *set, float step) {
 
     gpu_forward_propagate_neural_net(nn);
-/*
+
     gpu_backward_propagate_neural_net(nn, set->sample_labels, step);
-*/
+
 }
 
 

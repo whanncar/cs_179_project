@@ -10,43 +10,38 @@ __global__
 void shmemTransposeKernel(const float *input, float *output,
                           int num_rows, int num_cols) {
 
-    __shared__ float in_data[65*64];
-    __shared__ float out_data[65*64];
+    __shared__ float in_data[32*32];
+    __shared__ float out_data[32*32];
 
+    int i, j;
 
-    int i = threadIdx.x + 64 * blockIdx.x;
-    int j = 4 * threadIdx.y + 64 * blockIdx.y;
+    i = 32 * blockIdx.x + threadIdx.x;
+    j = 32 * blockIdx.y + threadIdx.y;
 
-    int i_data = threadIdx.x;
-    int j_data = 4 * threadIdx.y;
-    int offset_i_data = i_data + i_data / 32;
-    int offset_j_data = j_data + j_data / 32;
-    int k;
-
-    for (k = 0; k < 4; k++) {
-        if ((i < num_rows) && (j + k < num_cols)) {
-            in_data[offset_i_data + 65 * (j_data + k)] = input[i + num_cols * (j + k)];
-        }
+    if (i < num_rows && j < num_cols) {
+        in_data[threadIdx.x * 32 + threadIdx.y] = input[i * num_cols + j];
     }
-    __syncthreads();
-
-    for (k = 0; k < 4; k++)
-        out_data[offset_j_data + k + 65 * (i_data)]
-                = in_data[offset_i_data + 65 * (j_data + k)];
+    else {
+        in_data[threadIdx.x * 32 + threadIdx.y] = 0;
+    }
 
     __syncthreads();
 
-    i = threadIdx.x + 64 * blockIdx.y;
-    j = 4 * threadIdx.y + 64 * blockIdx.x;
+    out_data[blockIdx.y * 32 + blockIdx.x] = in_data[blockIdx.x * 32 + blockIdx.y];
 
-    for (k = 0; k < 4; k++) {
-        if ((i < num_cols) && (j + k < num_rows)) {
-            output[i + num_cols * (j + k)] = out_data[offset_i_data + 65 * (j_data + k)];
-        }
+    __syncthreads();
+
+    i = 32 * blockIdx.y + threadIdx.x;
+    j = 32 * blockIdx.x + threadIdx.y;
+
+    if (i < num_cols && j < num_rows) {
+        output[i * num_rows + j] = out_data[threadIdx.x * 32 + threadIdx.y];
     }
+
 }
 
-/* Make sure this ^ works */
+
+
 
 
 
@@ -156,24 +151,28 @@ void calcVectsSquareDiff(float *v1, float *v2, int length, float *v_result) {
 __global__
 void sumVectorEntries(float *v1, int length, float *result) {
 
+/*
+
     extern __shared__ float vals[];
-
+*/
     int index;
-
+/*
     int offset_start, offset;
 
     vals[threadIdx.x] = 0;
 
-
+*/
     for (index = blockDim.x * blockIdx.x + threadIdx.x;
          index < length;
          index += gridDim.x * blockDim.x) {
-
+/*
         vals[threadIdx.x] += v1[index];
+*/
 
+        atomicAdd(result, v1[index]);
     }
 
-
+/*
     offset_start = 1;
 
     while (offset_start < length) {
@@ -195,6 +194,9 @@ void sumVectorEntries(float *v1, int length, float *result) {
     if (threadIdx.x == 0) {
         atomicAdd(result, vals[threadIdx.x]);
     }
+*/
+
+
 
 }
 
@@ -224,46 +226,48 @@ __global__
 void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols, float *result) {
 
 
-    __shared__ float m1_sub[64][64];
-    __shared__ float m2_sub[64][64];
-    __shared__ float res_sub[64][64];
+    __shared__ float m1_sub[32 * 32];
+    __shared__ float m2_sub[32 * 32];
+    __shared__ float res_sub[32 * 32];
 
 
     int row, col, k, l;
 
-    /* Initialize the result to 0 */
-    res_sub[threadIdx.x][threadIdx.y] = 0;
 
-    for (k = 0; k < m1_cols / 64 + 1; k++) {
+    /* Initialize the result to 0 */
+    res_sub[threadIdx.x * 32 + threadIdx.y] = 0;
+
+
+    for (k = 0; k < m1_cols / 32 + 1; k++) {
 
         /* Obtain the submatrices */
 
-        row = blockIdx.x * 64 + threadIdx.x;
-        col = k * 64 + threadIdx.y;
+        row = blockIdx.x * 32 + threadIdx.x;
+        col = k * 32 + threadIdx.y;
 
         if ((row < m1_rows) && (col < m1_cols)) {
-            m1_sub[threadIdx.x][threadIdx.y] = m1[row * m1_cols + col];
+            m1_sub[threadIdx.x * 32 + threadIdx.y] = m1[row * m1_cols + col];
         }
         else {
-            m1_sub[threadIdx.x][threadIdx.y] = 0;
+            m1_sub[threadIdx.x * 32 + threadIdx.y] = 0;
         }
 
-        row = k * 64 + threadIdx.x;
-        col = blockIdx.y * 64 + threadIdx.y;
+        row = k * 32 + threadIdx.x;
+        col = blockIdx.y * 32 + threadIdx.y;
 
         if ((row < m1_cols) && (col < m2_cols)) {
-            m2_sub[threadIdx.x][threadIdx.y] = m2[row * m2_cols + col];
+            m2_sub[threadIdx.x * 32 + threadIdx.y] = m2[row * m2_cols + col];
         }
         else {
-            m2_sub[threadIdx.x][threadIdx.y] = 0;
+            m2_sub[threadIdx.x * 32 + threadIdx.y] = 0;
         }
 
         __syncthreads();
 
         /* Multiply the submatrices */
 
-        for (l = 0; l < 64; l++) {
-            res_sub[threadIdx.x][threadIdx.y] += m1_sub[threadIdx.x][l] * m2_sub[l][threadIdx.y];
+        for (l = 0; l < 32; l++) {
+            res_sub[threadIdx.x * 32 + threadIdx.y] += m1_sub[threadIdx.x * 32 + l] * m2_sub[l * 32 + threadIdx.y];
         }
 
         __syncthreads();
@@ -272,11 +276,11 @@ void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols,
 
     /* Store the result */
 
-    row = blockIdx.x * 64 + threadIdx.x;
-    col = blockIdx.y * 64 + threadIdx.y;
+    row = blockIdx.x * 32 + threadIdx.x;
+    col = blockIdx.y * 32 + threadIdx.y;
 
     if ((row < m1_rows) && (col < m2_cols)) {
-        result[row * m2_cols + col] = res_sub[threadIdx.x][threadIdx.y];
+        result[row * m2_cols + col] = res_sub[threadIdx.x * 32 + threadIdx.y];
     }
 
 }
@@ -292,8 +296,8 @@ void callMatrixTranspose(float *d_input,
                          int num_rows,
                          int num_cols)
 {
-    dim3 blockSize(64, 16);
-    dim3 gridSize(num_rows / 64 + 1, num_cols / 64 + 1);
+    dim3 blockSize(32, 32);
+    dim3 gridSize(num_rows / 32 + 1, num_cols / 32 + 1);
     shmemTransposeKernel<<<gridSize, blockSize>>>(d_input, d_output, num_rows, num_cols);
 }
  
@@ -302,7 +306,7 @@ void callMatrixTranspose(float *d_input,
 
 
 
-
+extern "C"
 
 void callLinCombOfVectors(float a, float *v1, float b, float *v2,
                           int length, float *v_result) {
@@ -327,7 +331,7 @@ void callLinCombOfVectors(float a, float *v1, float b, float *v2,
 }
 
 
-
+extern "C"
 
 void callAddConstantToVector(float a, float *v1, int length, float *v_result) {
 
@@ -350,7 +354,7 @@ void callAddConstantToVector(float a, float *v1, int length, float *v_result) {
 
 }
 
-
+extern "C"
 
 void callMultVectsCompwise(float *v1, float *v2, int length, float *v_result) {
 
@@ -373,6 +377,7 @@ void callMultVectsCompwise(float *v1, float *v2, int length, float *v_result) {
 
 }
 
+extern "C"
 
 float callCalcVectDist(float *v1, float *v2, int length) {
 
@@ -438,12 +443,12 @@ void callApplySigmoidToVector(float *v1, int length, float *result) {
 
 }
 
-
+extern "C"
 void callMatrixMultiply(float *m1, float *m2, int m1_rows,
                         int m1_cols, int m2_cols, float *result) {
 
-    dim3 blockSize(64, 64);
-    dim3 gridSize(m1_rows / 64 + 1, m2_cols / 64 + 1);   
+    dim3 blockSize(32, 32);
+    dim3 gridSize(m1_rows / 32 + 1, m2_cols / 32 + 1);   
 
     matrixMultiply<<<gridSize, blockSize>>>(m1, m2, m1_rows, m1_cols, m2_cols, result);
 

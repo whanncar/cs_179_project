@@ -18,28 +18,11 @@ void print_matrix(data_matrix *);
 
 int main(int argc, char **argv) {
 
-    data_matrix *m1, *m2, *m3;
-    data_matrix *m1_dev, *m2_dev, *m3_dev;
 
-    m1 = new_data_matrix(10, 10);
-    m2 = new_data_matrix(10, 10);
-    m3 = new_data_matrix(10, 10);
-
-    fill_matrix_rand(m1, 0, 1);
-    fill_matrix_rand(m2, 0, 1);
-
-    calculate_matrix_times_matrix(m1, m2, m3);
-
-    print_matrix(m1);
-    print_matrix(m2);
-    print_matrix(m3);
-
-
-/*
-    float loss;
+    float loss, gpu_loss;
     float lambda;
 
-    lambda = .0005;
+    lambda = .0001;
 
     if (argc == 1) {
         printf(usage);
@@ -55,25 +38,27 @@ int main(int argc, char **argv) {
 
     gpu_set_neural_net_input(nn_dev, samples_dev);
 
-    train_neural_net(nn, samples, lambda);
-    gpu_train_neural_net(nn_dev, lambda);
+    train_neural_net(nn, samples, lambda); 
+    gpu_train_neural_net(nn_dev, samples_dev, lambda);
 
     printf("%f\n", calculate_loss(nn, samples));
     printf("%f\n", gpu_calculate_loss(nn_dev, samples_dev));
 
 
-    while (1) {
+    while (1) { 
 
         train_neural_net(nn, samples, lambda);
         loss = calculate_loss(nn, samples);
 
-        print_output(nn);
- 
-        print_weights(nn);
+        gpu_train_neural_net(nn_dev, samples_dev, lambda);
+        gpu_loss = gpu_calculate_loss(nn_dev, samples_dev);
 
-        printf("%f, %f\n", loss, calculate_percent_predicted_correctly(nn, samples));
-    }
-*/
+        printf("%f\n", loss);
+        printf("%f\n", gpu_loss);
+
+/*        printf("%f, %f\n", loss, calculate_percent_predicted_correctly(nn, samples)); */
+    } 
+
     return 0;
 }
 
