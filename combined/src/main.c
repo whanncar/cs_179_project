@@ -1,7 +1,7 @@
 #include "main.h"
 
-#define NUM_ITERATIONS 1000
-#define LAMBDA .0001
+#define NUM_ITERATIONS 10000
+#define LAMBDA .00005
 
 neural_net *nn;
 neural_net *nn_dev;
@@ -34,9 +34,13 @@ int main(int argc, char **argv) {
 
         gpu_train_neural_net(nn_dev, samples_dev, LAMBDA);
 
-        printf("Iteration: %d\nLoss: %d\n\n", iteration,
+printf("Iteration: %d\n", iteration);
+
+/*        printf("Iteration: %d\nLoss: %f\n\n", iteration,
                gpu_calculate_loss(nn_dev, samples_dev));
-    } 
+  */  } 
+
+    gpu_free_neural_net(nn_dev);
 
     return 0;
 }
@@ -65,7 +69,9 @@ void initialize_neural_net(int argc, char **argv) {
 
     num_layers += 1;
 
-    nn = new_neural_net(num_layers, num_inputs, input_size, output_size, layer_weight_specs);
+    nn = new_neural_net(num_layers, num_inputs,
+                        input_size, output_size,
+                        layer_weight_specs);
 
     initialize_neural_net_weights(nn);
 

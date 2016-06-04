@@ -10,10 +10,9 @@ __global__
 void shmemTransposeKernel(const float *input, float *output,
                           int num_rows, int num_cols) {
 
-/*
 
-    __shared__ float in_data[32*32];
-    __shared__ float out_data[32*32];
+    __shared__ float in_data[32][33];
+    __shared__ float out_data[32][33];
 
     int i, j;
 
@@ -21,15 +20,15 @@ void shmemTransposeKernel(const float *input, float *output,
     j = 32 * blockIdx.y + threadIdx.y;
 
     if (i < num_rows && j < num_cols) {
-        in_data[threadIdx.x * 32 + threadIdx.y] = input[i * num_cols + j];
+        in_data[threadIdx.x][threadIdx.y] = input[i * num_cols + j];
     }
     else {
-        in_data[threadIdx.x * 32 + threadIdx.y] = 0;
+        in_data[threadIdx.x][threadIdx.y] = 0;
     }
 
     __syncthreads();
 
-    out_data[blockIdx.y * 32 + blockIdx.x] = in_data[blockIdx.x * 32 + blockIdx.y];
+    out_data[threadIdx.y][threadIdx.x] = in_data[threadIdx.x][threadIdx.y];
 
     __syncthreads();
 
@@ -37,17 +36,7 @@ void shmemTransposeKernel(const float *input, float *output,
     j = 32 * blockIdx.x + threadIdx.y;
 
     if (i < num_cols && j < num_rows) {
-        output[i * num_rows + j] = out_data[threadIdx.x * 32 + threadIdx.y];
-    }
-
-*/
-    int i, j;
-
-    i = 32 * blockIdx.x + threadIdx.x;
-    j = 32 * blockIdx.y + threadIdx.y;
-
-    if (i < num_rows && j < num_cols) {
-        output[j * num_rows + i] = input[i * num_cols + j];
+        output[i * num_rows + j] = out_data[threadIdx.x][threadIdx.y];
     }
 
 }
@@ -238,16 +227,16 @@ __global__
 void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols, float *result) {
 
 
-    __shared__ float m1_sub[32 * 32];
-    __shared__ float m2_sub[32 * 32];
-    __shared__ float res_sub[32 * 32];
+    __shared__ float m1_sub[32][33];
+    __shared__ float m2_sub[32][33];
+    __shared__ float res_sub[32][33];
 
 
     int row, col, k, l;
 
 
     /* Initialize the result to 0 */
-    res_sub[threadIdx.x * 32 + threadIdx.y] = 0;
+    res_sub[threadIdx.x][threadIdx.y] = 0;
 
 
     for (k = 0; k < m1_cols / 32 + 1; k++) {
@@ -258,20 +247,20 @@ void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols,
         col = k * 32 + threadIdx.y;
 
         if ((row < m1_rows) && (col < m1_cols)) {
-            m1_sub[threadIdx.x * 32 + threadIdx.y] = m1[row * m1_cols + col];
+            m1_sub[threadIdx.x][threadIdx.y] = m1[row * m1_cols + col];
         }
         else {
-            m1_sub[threadIdx.x * 32 + threadIdx.y] = 0;
+            m1_sub[threadIdx.x][threadIdx.y] = 0;
         }
 
         row = k * 32 + threadIdx.x;
         col = blockIdx.y * 32 + threadIdx.y;
 
         if ((row < m1_cols) && (col < m2_cols)) {
-            m2_sub[threadIdx.x * 32 + threadIdx.y] = m2[row * m2_cols + col];
+            m2_sub[threadIdx.x][threadIdx.y] = m2[row * m2_cols + col];
         }
         else {
-            m2_sub[threadIdx.x * 32 + threadIdx.y] = 0;
+            m2_sub[threadIdx.x][threadIdx.y] = 0;
         }
 
         __syncthreads();
@@ -279,7 +268,7 @@ void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols,
         /* Multiply the submatrices */
 
         for (l = 0; l < 32; l++) {
-            res_sub[threadIdx.x * 32 + threadIdx.y] += m1_sub[threadIdx.x * 32 + l] * m2_sub[l * 32 + threadIdx.y];
+            res_sub[threadIdx.x][threadIdx.y] += m1_sub[threadIdx.x][l] * m2_sub[l][threadIdx.y];
         }
 
         __syncthreads();
@@ -292,7 +281,7 @@ void matrixMultiply(float *m1, float *m2, int m1_rows, int m1_cols, int m2_cols,
     col = blockIdx.y * 32 + threadIdx.y;
 
     if ((row < m1_rows) && (col < m2_cols)) {
-        result[row * m2_cols + col] = res_sub[threadIdx.x * 32 + threadIdx.y];
+        result[row * m2_cols + col] = res_sub[threadIdx.x][threadIdx.y];
     }
 
 }
