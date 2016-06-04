@@ -29,6 +29,8 @@ void convolve(data_matrix *input, data_matrix *kernel,
 
 const char *getfield(char *line, int num);
 
-
+data_matrix *convolutional_preprocessing(int numSamples,
+                                         int sampleLength, 
+                                         char *filepath);
 
 #endif /* CONVOLVE_H */

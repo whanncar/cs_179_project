@@ -1,7 +1,7 @@
 #include "main.h"
 
 #define NUM_ITERATIONS 10000
-#define LAMBDA .00005
+#define LAMBDA .0001
 
 neural_net *nn;
 neural_net *nn_dev;
@@ -17,9 +17,10 @@ int main(int argc, char **argv) {
     int iteration;
 
     if (argc == 1) {
-        printf(usage);
+        printf("%s", usage);
         return 0;
     }
+
 
     initialize_neural_net(argc, argv);
     gpu_initialize_neural_net(argc, argv);
@@ -34,11 +35,9 @@ int main(int argc, char **argv) {
 
         gpu_train_neural_net(nn_dev, samples_dev, LAMBDA);
 
-printf("Iteration: %d\n", iteration);
-
-/*        printf("Iteration: %d\nLoss: %f\n\n", iteration,
+        printf("Iteration: %d\nLoss: %f\n\n", iteration,
                gpu_calculate_loss(nn_dev, samples_dev));
-  */  } 
+    } 
 
     gpu_free_neural_net(nn_dev);
 
@@ -111,8 +110,19 @@ void gpu_initialize_neural_net(int argc, char **argv) {
 
 void initialize_samples(int argc, char **argv) {
 
+    data_matrix *temp;    
+
     samples = get_samples_from_file("training_data/mnist_test.csv",
                                     atoi(argv[1]), atoi(argv[2]));
+
+
+    temp = convolutional_preprocessing(atoi(argv[1]), atoi(argv[2]), "training_data/mnist_test.csv");
+
+    fprintf(stderr, "%d w %d h\n%d %d\n", temp->num_cols, temp->num_rows, samples->sample_inputs->num_cols, samples->sample_inputs->num_rows);
+
+    compute_matrix_transpose(temp, samples->sample_inputs);
+
+    
 }
 
 

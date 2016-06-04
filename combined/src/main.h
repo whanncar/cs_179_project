@@ -12,6 +12,7 @@
 #include "neural_net/neural_net_exec/gpu_neural_net_exec.h"
 #include "neural_net/neural_net_stat/gpu_neural_net_stat.h"
 
+#include "convolve/convolve.h"
 
 void initialize_neural_net(int, char **);
 void gpu_initialize_neural_net(int, char **);

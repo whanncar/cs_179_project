@@ -4,15 +4,17 @@
 void initializeKernels(data_matrix *kernelsArray,
                        int numKernels, int imageDim) {
 
-    for(int k = 0; k < numKernels; k++) {
+    int i, j, k;
+
+    for(k = 0; k < numKernels; k++) {
 
         kernelsArray[k].data      = (float *) malloc(imageDim * imageDim * sizeof(float));
         kernelsArray[k].num_cols  = imageDim;
         kernelsArray[k].num_rows  = imageDim;
         kernelsArray[k].stride    = imageDim;
 
-        for(int i = 0; i < imageDim; i++) {
-            for(int j = 0; j < imageDim; j++) {
+        for(i = 0; i < imageDim; i++) {
+            for(j = 0; j < imageDim; j++) {
                 kernelsArray[k].data[i*imageDim + j] = 0;
             }
         }
@@ -24,29 +26,30 @@ void stackImages(data_matrix *inputData, data_matrix * kernels,
                  data_matrix *referenceLabels, int numKernels,
                  int numSamples, int imageDim, int maxPixelVal) {
 
+    int numericVals, k, i, j;
     float count = 0;
 
-    for (int numericVals = 0; numericVals < numKernels; numericVals ++) {
+    for (numericVals = 0; numericVals < numKernels; numericVals ++) {
 
         count = 0;
         /* For images k */
-        for (int k = 0; k < numSamples; k++) {
+        for (k = 0; k < numSamples; k++) {
             /* If image matches */
             if (referenceLabels->data[k] == numericVals) {
                 count = count + 1;
                 /* For each pixel */
-                for (int i = 0; i <  IMAGE_DIM; i++) {
-                    for (int j = 0; j <  IMAGE_DIM; j++) {
+                for (i = 0; i <  IMAGE_DIM; i++) {
+                    for (j = 0; j <  IMAGE_DIM; j++) {
                         kernels[numericVals].data[i* IMAGE_DIM+j] +=
-                            inputData->data[k*(IMAGE_DIM* IMAGE_DIM + 1) + i* IMAGE_DIM + j]; 
+                            inputData->data[k*(IMAGE_DIM* IMAGE_DIM) + i* IMAGE_DIM + j]; 
                     }
                 }
             }
         }
 
-        for (int i = 0; i < IMAGE_DIM; i++)     //for each pixel normalize the image
+        for (i = 0; i < IMAGE_DIM; i++)     //for each pixel normalize the image
         {
-            for(int j = 0; j < IMAGE_DIM; j++)
+            for(j = 0; j < IMAGE_DIM; j++)
             {
                 kernels[numericVals].data[i * IMAGE_DIM + j] =
                     kernels[numericVals].data[i * IMAGE_DIM + j]/(count * maxPixelVal); 
@@ -81,14 +84,9 @@ void getDataFromFile(char * inputFile, float * labels, float * data, int numRows
 
         while(record != NULL && (j < numCols))  
         {
-            data[i*(numCols + 1) + j] = atoi(record);
+            data[i*numCols + j] = atoi(record);
             record = strtok(NULL,",");
-            j++;
-            if(j == numCols) //if j == numCol -1 (since j++ )
-            {
-                data[i*(numCols + 1) + j] = 1;  //Add one extra element at the end for a bias
-                //printf("  %f", data[i*(numCols + 1) + j]);
-            }
+            j++; 
         }
         //printf("%d %d\n", j-1, data[i*(numCols + 1) + j-1] );
         ++i ;
@@ -119,10 +117,11 @@ const char* getfield(char* line, int num)
 float pyramid_product(data_matrix *input, data_matrix *kernel, int x, int y) {
 
     float sum  = 0;
+    int i, j;
 
-    for(int i = 0; i < kernel->num_rows; i++) //Row
+    for(i = 0; i < kernel->num_rows; i++) //Row
     {
-        for(int j = 0; j < kernel->num_cols; j++) //cols
+        for(j = 0; j < kernel->num_cols; j++) //cols
         {
             if ((x + i < 0) || (x + i >= IMAGE_DIM) || (y + j < 0) || (y + j >= IMAGE_DIM)) {
                 continue;
@@ -150,4 +149,72 @@ void convolve(data_matrix *input, data_matrix *kernel, data_matrix *output) {
 
         }
     }
+}
+
+
+void convolve_all(data_matrix *input, data_matrix *kernel,
+                  data_matrix *output, int num_samples) {
+
+    int i;
+
+    data_matrix *temp_input;
+    data_matrix *temp_output;
+
+    temp_input = (data_matrix *) malloc(sizeof(data_matrix));
+    temp_output = (data_matrix *) malloc(sizeof(data_matrix));
+
+    temp_input->num_rows = IMAGE_DIM;
+    temp_input->num_cols = IMAGE_DIM;
+
+    temp_output->num_rows = IMAGE_DIM;
+    temp_output->num_cols = IMAGE_DIM;
+
+    for (i = 0; i < num_samples; i++) {
+        temp_input->data = input->data + i * IMAGE_DIM * IMAGE_DIM;
+        temp_output->data = output->data + i * IMAGE_DIM * IMAGE_DIM;
+        convolve(temp_input, kernel, temp_output);
+    }    
+/*
+    free(temp_input);
+    free(temp_output);
+*/
+}
+
+
+
+
+
+data_matrix *convolutional_preprocessing(int numSamples, int sampleLength, char *filepath) {
+
+    data_matrix * kernels = (data_matrix *) malloc(NUM_KERNELS * sizeof(data_matrix));
+    data_matrix * inputData = (data_matrix *) malloc(sizeof(data_matrix));
+    data_matrix * referenceLabels = (data_matrix *) malloc(sizeof(data_matrix));
+    data_matrix * output = (data_matrix *) malloc(sizeof(data_matrix));
+
+    float count = 0;
+    float MaxPixVal = 255;
+
+    output->data = (float *) malloc(IMAGE_DIM*IMAGE_DIM*numSamples*sizeof(float));
+    output->num_cols = IMAGE_DIM * IMAGE_DIM;
+    output->num_rows = numSamples;
+    output->stride = IMAGE_DIM;
+
+    referenceLabels->data = (float *) malloc(numSamples * sizeof(float));
+    referenceLabels->num_cols = 1;
+    referenceLabels->num_rows = numSamples;
+    referenceLabels->stride = 1;
+
+    inputData->data = (float *) malloc(numSamples * sampleLength * sizeof(float));
+    inputData->num_cols = sampleLength;
+    inputData->num_rows = numSamples;
+    inputData->stride = sampleLength;
+
+    getDataFromFile(filepath, referenceLabels->data, inputData->data, numSamples, sampleLength);
+
+    initializeKernels(kernels, NUM_KERNELS, IMAGE_DIM);
+    printf("stackImages\n");
+    stackImages(inputData, kernels, referenceLabels, NUM_KERNELS, numSamples, IMAGE_DIM, MaxPixVal);
+    printf("convolve_All\n");
+    convolve_all(inputData, kernels, output, numSamples);
+    return output;
 }
