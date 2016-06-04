@@ -39,8 +39,8 @@ void shmemTransposeKernel(const float *input, float *output,
     if (i < num_cols && j < num_rows) {
         output[i * num_rows + j] = out_data[threadIdx.x * 32 + threadIdx.y];
     }
-*/
 
+*/
     int i, j;
 
     i = 32 * blockIdx.x + threadIdx.x;
@@ -465,3 +465,6 @@ void callMatrixMultiply(float *m1, float *m2, int m1_rows,
     matrixMultiply<<<gridSize, blockSize>>>(m1, m2, m1_rows, m1_cols, m2_cols, result);
 
 }
+
+
+

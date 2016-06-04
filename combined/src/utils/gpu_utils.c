@@ -71,7 +71,7 @@ callAddConstantToVector(c, m->data, m->num_rows * m->num_cols, result->data);
 
 void gpu_multiply_matrices_componentwise(data_matrix *m1, data_matrix *m2, data_matrix *result) {
 
-callMultVectsCompwise(m1->data, m2->data, m1->num_rows * m2->num_rows, result->data);
+callMultVectsCompwise(m1->data, m2->data, m1->num_rows * m1->num_cols, result->data);
 
 }
 

@@ -38,22 +38,22 @@ int main(int argc, char **argv) {
 
     gpu_set_neural_net_input(nn_dev, samples_dev);
 
-    train_neural_net(nn, samples, lambda); 
+/*    train_neural_net(nn, samples, lambda); */
     gpu_train_neural_net(nn_dev, samples_dev, lambda);
 
-    printf("%f\n", calculate_loss(nn, samples));
+/*    printf("%f\n", calculate_loss(nn, samples)); */
     printf("%f\n", gpu_calculate_loss(nn_dev, samples_dev));
 
 
     while (1) { 
 
-        train_neural_net(nn, samples, lambda);
-        loss = calculate_loss(nn, samples);
+/*        train_neural_net(nn, samples, lambda);
+        loss = calculate_loss(nn, samples);  */
 
         gpu_train_neural_net(nn_dev, samples_dev, lambda);
         gpu_loss = gpu_calculate_loss(nn_dev, samples_dev);
 
-        printf("%f\n", loss);
+/*        printf("%f\n", loss); */
         printf("%f\n", gpu_loss);
 
 /*        printf("%f, %f\n", loss, calculate_percent_predicted_correctly(nn, samples)); */
