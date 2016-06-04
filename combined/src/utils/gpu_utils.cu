@@ -10,6 +10,8 @@ __global__
 void shmemTransposeKernel(const float *input, float *output,
                           int num_rows, int num_cols) {
 
+/*
+
     __shared__ float in_data[32*32];
     __shared__ float out_data[32*32];
 
@@ -36,6 +38,16 @@ void shmemTransposeKernel(const float *input, float *output,
 
     if (i < num_cols && j < num_rows) {
         output[i * num_rows + j] = out_data[threadIdx.x * 32 + threadIdx.y];
+    }
+*/
+
+    int i, j;
+
+    i = 32 * blockIdx.x + threadIdx.x;
+    j = 32 * blockIdx.y + threadIdx.y;
+
+    if (i < num_rows && j < num_cols) {
+        output[j * num_rows + i] = input[i * num_cols + j];
     }
 
 }
